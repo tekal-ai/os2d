@@ -24,7 +24,12 @@ from os2d.structures.feature_map import FeatureMapSize
 
 
 def read_annotation_file(path):
-    dataframe = pd.read_csv(path)
+    if path[-4:] == '.csv':
+        dataframe = pd.read_csv(path)
+        if len(dataframe.columns) <= 1:
+            dataframe = pd.read_csv(path, sep=';')
+    else:
+        dataframe = pd.read_excel(path)
 
     # add "imagefilename" and "classfilename" columns with default file names
     if not "imagefilename" in dataframe.columns:
@@ -65,6 +70,21 @@ def build_eval_dataset(data_path, name, eval_scale, cache_images=False, no_image
             gtboxframe["difficult"] = 0
         gt_path = os.path.join(data_path, "paste", annotation_folder, "images")
         image_path = os.path.join(data_path, "paste", "src", "original")
+        gtboxframe = read_annotation_file(classdatafile)
+    elif "industry-benchmark" in name.lower():
+        annotation_folder="classes"
+        image_size = 1280
+        classdatafile = os.path.join(data_path, "LigiLog-100", annotation_folder,"industry-benchmark.csv")
+        image_path = os.path.join(data_path, "LigiLog-100", "src", "images")
+        gtboxframe = read_annotation_file(classdatafile)
+        gt_path = os.path.join(data_path, "LigiLog-100", annotation_folder, "images")
+    elif "logodet-3k" in name.lower():
+        annotation_folder="classes"
+        image_size = 1280
+        classdatafile = os.path.join(data_path, "LogoDet-3K_os2d", annotation_folder,"logodet3k.csv")
+        image_path = os.path.join(data_path, "LogoDet-3K_os2d", "src", "images")
+        gtboxframe = read_annotation_file(classdatafile)
+        gt_path = os.path.join(data_path, "LogoDet-3K_os2d", annotation_folder, "images")
     else:
         raise(RuntimeError("Unknown dataset {0}".format(name)))
 
@@ -597,6 +617,11 @@ class DatasetOneShotDetection(data.Dataset):
         self.logger.info("Loaded dataset {0} with {1} images, {2} boxes, {3} classes".format(
             self.name, self.num_images, self.num_boxes, self.num_classes
         ))
+        #print(self.get_image_annotation_for_imageid(1))
+        #for box in self.get_image_annotation_for_imageid(1):
+        #    print(box)
+       #zxcvb
+
 
     def get_name(self):
         return self.name
@@ -697,7 +722,7 @@ class DatasetOneShotDetection(data.Dataset):
             boxes = BoxList.create_empty(image_size)
             label_ids_global = torch.tensor([], dtype=torch.long)
             difficult_flag = torch.tensor([], dtype=torch.bool)
-
+        
         boxes.add_field("labels", label_ids_global)
         boxes.add_field("difficult", difficult_flag)
         boxes.add_field("labels_original", label_ids_global)
