@@ -17,6 +17,100 @@ from os2d.structures.feature_map import FeatureMapSize
 import os2d.utils.visualization as visualizer
 
 
+def get_batch_iou(bb1, bb2):
+    """
+    Calculate the Intersection over Union (IoU) of two bounding boxes.
+
+    Parameters
+    ----------
+    bb1 : shape (batch_size, 4), coordinates of type cx,cy,w,h
+    bb2 : shape (batch_size, 4), coordinates of type cx,cy,w,h
+    """
+    bb1 = np.array(bb1)
+    bb2 = np.array(bb2)
+
+    if (len(bb1.shape) == 1):
+        bb1 = bb1[np.newaxis, :]
+    if (len(bb2.shape) == 1):
+        bb2 = bb2[np.newaxis, :]
+
+    x1_left = bb1[:, 0] - bb1[:, 2]/2
+    x1_right = bb1[:, 0] + bb1[:, 2]/2
+    y1_top = bb1[:, 1] - bb1[:, 3]/2
+    y1_bottom = bb1[:, 1] + bb1[:, 3]/2
+
+    x2_left = bb2[:, 0] - bb2[:, 2]/2
+    x2_right = bb2[:, 0] + bb2[:, 2]/2
+    y2_top = bb2[:, 1] - bb2[:, 3]/2
+    y2_bottom = bb2[:, 1] + bb2[:, 3]/2
+
+    x_left = np.maximum(x1_left[:,np.newaxis], x2_left[np.newaxis,:])
+    y_top = np.maximum(y1_top[:,np.newaxis], y2_top[np.newaxis,:])
+    x_right = np.minimum(x1_right[:,np.newaxis], x2_right[np.newaxis,:])
+    y_bottom = np.minimum(y1_bottom[:,np.newaxis], y2_bottom[np.newaxis,:])
+
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+
+    bb1_area = (x1_right - x1_left) * (y1_bottom - y1_top)
+    bb2_area = (x2_right - x2_left) * (y2_bottom - y2_top)
+
+    bb1_area = bb1_area[:,np.newaxis]
+    bb2_area = bb2_area[np.newaxis,:]
+
+    iou = intersection_area / (bb1_area + bb2_area - intersection_area)
+    iou[iou < 0.0] = 0.0
+
+    return iou
+
+def get_top_boxes(outputs, costs, n=5, threshold=0.5):
+    pred_boxes = outputs['pred_boxes'].squeeze()
+    costs = costs.squeeze()
+
+    ious = get_batch_iou(pred_boxes, pred_boxes)
+    indices_ordered = np.argsort(costs)
+    ious_ordered = ious[indices_ordered]
+    
+    top_boxes = []
+    mask = np.ones_like(indices_ordered, dtype=bool)
+    for i in range(n):
+        new_idx = -1
+        for idx in indices_ordered:
+            if mask[idx.item()]:
+                new_idx = idx.item()
+                break
+        if new_idx < 0:
+            break
+        top_boxes.append(new_idx)
+        mask = mask & (ious[new_idx] < threshold)
+    return top_boxes
+
+def get_best_candidate_by_similarity(samples, outputs, targets, criterion):
+    indices, costs = criterion.matcher(outputs, targets, True)
+    top5_bboxes_idxs = get_top_boxes(outputs, costs.squeeze(-1), n=5)
+
+    pred_boxes = box_cxcywh_to_xyxy(outputs['pred_boxes']).squeeze()
+    _, _, h, w = samples[0].tensors.shape
+
+    pred_boxes[:,0] *= w
+    pred_boxes[:,1] *= h
+    pred_boxes[:,2] *= w
+    pred_boxes[:,3] *= h
+
+    sample_img = transforms.ToPILImage()(samples[0].tensors.squeeze())
+    patch_img = transforms.ToPILImage()(samples[1].squeeze())
+    similarity_scores=[]
+
+    for idx in top5_bboxes_idxs:
+        b = pred_boxes[idx]
+        pred_img = sample_img.crop((b[0].item(), b[1].item(), b[2].item(), b[3].item()))
+        similarity_scores.append(get_similarity_score(pred_img, patch_img).item())
+    top_score_idx = np.argmax(similariy_scores)
+    idx = top5_bboxes_idxs[top_score_idx]
+
+    proposed_box = pred_boxes[idx]
+    return propopsed_box
+
+
 @torch.no_grad() # do evaluation in forward mode (for speed and memory)
 def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False):
     """
@@ -32,41 +126,45 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
     Returns:
         losses (OrderedDict) - all computed metrics, e.g., losses["mAP@0.50"] - mAP at IoU threshold 0.5
     """
+    print('hereeee')
+    print(os.path.join(cfg.visualization.eval.path_to_save_detections, dataloader.get_name() + "_detections.pth"))
+    
     logger = logging.getLogger("OS2D.evaluate")
     dataset_name = dataloader.get_name()
     dataset_scale = dataloader.get_eval_scale()
     logger.info("Starting to eval on {0}, scale {1}".format(dataset_name, dataset_scale))
     t_start_eval = time.time()
     net.eval()
-
+    print('hereeee2')
     iterator = make_iterator_extract_scores_from_images_batched(dataloader, net, logger,
                                                                 image_batch_size=cfg.eval.batch_size,
                                                                 is_cuda=cfg.is_cuda,
                                                                 class_image_augmentation=cfg.eval.class_image_augmentation)
-
+    print('hereeee3')
     boxes = []
     gt_boxes = []
     losses = OrderedDict()
     image_ids = []
-
     # loop over all dataset images
     num_evaluted_images = 0
     for data in iterator:
+        print('hereeee4')
         image_id, image_loc_scores_pyramid, image_class_scores_pyramid,\
                     image_pyramid, query_img_sizes, class_ids,\
                     box_reverse_transform, image_fm_sizes_p, transform_corners_pyramid\
                     = data
         image_ids.append(image_id)
-
         num_evaluted_images += 1
         img_size_pyramid = [FeatureMapSize(img=img) for img in image_pyramid]
 
         num_labels = len(class_ids)
+
         gt_boxes_one_image = dataloader.get_image_annotation_for_imageid(image_id)
         gt_boxes.append(gt_boxes_one_image)
 
         # compute losses
         if len(gt_boxes_one_image) > 0:
+            print('aaaa')
             # there is some annotation for this image
             gt_labels_one_image = gt_boxes_one_image.get_field("labels")
             dataloader.update_box_labels_to_local(gt_boxes_one_image, class_ids)
@@ -75,7 +173,7 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
                     dataloader.box_coder.encode_pyramid(gt_boxes_one_image,
                                                         img_size_pyramid, num_labels,
                                                         default_box_transform_pyramid=box_reverse_transform)
-
+            print('bbbbb')
             # return the original labels back
             gt_boxes_one_image.add_field("labels", gt_labels_one_image)
 
@@ -104,7 +202,7 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
                 print_meters(losses_iter, logger)
                 # update logs
                 add_to_meters_in_dict(losses_iter, losses)
-        
+        print('ccccc')
         # decode image predictions
         boxes_one_image = \
             dataloader.box_coder.decode_pyramid(image_loc_scores_pyramid, image_class_scores_pyramid,
@@ -113,9 +211,10 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
                                                 nms_score_threshold=cfg.eval.nms_score_threshold,
                                                 inverse_box_transforms=box_reverse_transform,
                                                 transform_corners_pyramid=transform_corners_pyramid)
-
         boxes.append(boxes_one_image.cpu())
-        
+        print(type(boxes_one_image), type(gt_boxes_one_image))
+        asdf
+        #cfg.visualization.eval.show_detections = True
         if cfg.visualization.eval.show_detections:
             visualizer.show_detection_from_dataloader(boxes_one_image, image_id, dataloader, cfg.visualization.eval, class_ids=None)
         
@@ -219,7 +318,7 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
     assert len(class_aspect_ratios) == num_classes
     assert len(class_ids) == num_classes
     query_img_sizes = [FeatureMapSize(img=img) for img in class_images]
-    
+
     # the current code works only with class batch == 1, this in inefficient in some place, but good in others
     # is there a better way?
     class_batch_size = 1
@@ -273,7 +372,9 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
             class_conv_layer_batched.append(class_conv_layer)
     
     # loop over all images
+
     iterator_batches = dataloader.make_iterator_for_all_images(image_batch_size, num_random_pyramid_scales=num_random_pyramid_scales)
+
     for batch_ids, pyramids_batch, box_transforms_batch, initial_img_size_batch in iterator_batches:
         t_start_batch = time.time()
         # select labels to use for search at this batch
@@ -288,10 +389,10 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
         else:
             # take all the labels - needed for evaluation
             batch_labels_local = torch.arange(len(class_conv_layer_batched))
-        
+
         batch_class_ids = [class_ids[l // num_class_views] for l in batch_labels_local]
         batch_query_img_sizes = [query_img_sizes[l // num_class_views] for l in batch_labels_local]
-
+        
         # extract features at all pyramid levels
         batch_images_pyramid = []
         loc_scores = []
@@ -308,7 +409,7 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
             
             t_start_features = time.time()
             feature_maps = net.net_feature_maps(batch_images)
-            torch.cuda.synchronize()
+            #torch.cuda.synchronize()
             t_cum_features += time.time() - t_start_features
 
             # batch class images
@@ -328,7 +429,7 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
                 class_scores[-1].append(class_s_p)
                 fm_sizes[-1].append(fm_sizes_p)
                 transform_corners[-1].append(transform_corners_p)
-            torch.cuda.synchronize()
+            #torch.cuda.synchronize()
             t_cum_labels += time.time() - t_start_labels
 
             if not feature_maps.requires_grad:
@@ -336,6 +437,9 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
                 del feature_maps
 
             batch_images_pyramid.append(batch_images)
+        #print(pyramids_batch)
+        #print(len(batch_images_pyramid), batch_images_pyramid[0].shape)
+        #print(len(loc_scores), len(loc_scores),loc_scores[0][0].shape)
 
         timing_str = "Feature time: {0}, Label time: {1}, ".format(time_for_printing(t_cum_features, mode="s"),
                                                           time_for_printing(t_cum_labels, mode="s"))
@@ -366,5 +470,6 @@ def make_iterator_extract_scores_from_images_batched(dataloader, net, logger, im
             box_reverse_transforms = box_transforms_batch[i_image_in_batch]
 
             logger.info(timing_str + "Net time: {0}".format(time_since(t_start_batch)))
+            print('IDDD', image_id, image_id)
             yield image_id, image_loc_scores_p, image_class_scores_p, one_image_pyramid,\
                   batch_query_img_sizes, batch_class_ids, box_reverse_transforms, image_fm_sizes_p, transform_corners_p
