@@ -126,21 +126,17 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
     Returns:
         losses (OrderedDict) - all computed metrics, e.g., losses["mAP@0.50"] - mAP at IoU threshold 0.5
     """
-    print('hereeee')
-    print(os.path.join(cfg.visualization.eval.path_to_save_detections, dataloader.get_name() + "_detections.pth"))
-    
     logger = logging.getLogger("OS2D.evaluate")
     dataset_name = dataloader.get_name()
     dataset_scale = dataloader.get_eval_scale()
     logger.info("Starting to eval on {0}, scale {1}".format(dataset_name, dataset_scale))
     t_start_eval = time.time()
     net.eval()
-    print('hereeee2')
     iterator = make_iterator_extract_scores_from_images_batched(dataloader, net, logger,
                                                                 image_batch_size=cfg.eval.batch_size,
                                                                 is_cuda=cfg.is_cuda,
                                                                 class_image_augmentation=cfg.eval.class_image_augmentation)
-    print('hereeee3')
+
     boxes = []
     gt_boxes = []
     losses = OrderedDict()
@@ -148,7 +144,6 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
     # loop over all dataset images
     num_evaluted_images = 0
     for data in iterator:
-        print('hereeee4')
         image_id, image_loc_scores_pyramid, image_class_scores_pyramid,\
                     image_pyramid, query_img_sizes, class_ids,\
                     box_reverse_transform, image_fm_sizes_p, transform_corners_pyramid\
@@ -164,7 +159,6 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
 
         # compute losses
         if len(gt_boxes_one_image) > 0:
-            print('aaaa')
             # there is some annotation for this image
             gt_labels_one_image = gt_boxes_one_image.get_field("labels")
             dataloader.update_box_labels_to_local(gt_boxes_one_image, class_ids)
@@ -187,6 +181,7 @@ def evaluate(dataloader, net, cfg, criterion=None, print_per_class_results=False
                 transform_corners_pyramid = [transform_corners.cuda() for transform_corners in transform_corners_pyramid]
 
             add_batch_dim = lambda list_of_tensors: [t.unsqueeze(0) for t in list_of_tensors]
+            
             if criterion is not None:
                 # if criterion is provided, use it to compute all metrics it can
                 losses_iter = criterion(add_batch_dim(image_loc_scores_pyramid) if image_loc_scores_pyramid[0] is not None else None,

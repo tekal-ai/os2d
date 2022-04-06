@@ -178,25 +178,25 @@ def main():
   #  fig.savefig("detections15.jpg")
     
     # Optimizer
-  #  parameters = get_trainable_parameters(net)
-  #  optimizer = create_optimizer(parameters, cfg.train.optim, optimizer_state)
+    parameters = get_trainable_parameters(net)
+    optimizer = create_optimizer(parameters, cfg.train.optim, optimizer_state)
+    #cfg.train.dataset_name = 'logodet-3k'
 
     # load the dataset
     data_path = get_data_path()
     print(data_path)
-    data_path = '../data'
-    #dataloader_train, datasets_train_for_eval = build_train_dataloader_from_config(cfg, box_coder, img_normalization,
-    #      
-    #                                                                          data_path=data_path)
-    cfg.eval.dataset_names = ['logodet-3k']
-    #cfg.eval.dataset_names = ["industry-benchmark"]
+    data_path = 'data'
+    dataloader_train, datasets_train_for_eval = build_train_dataloader_from_config(cfg, box_coder, img_normalization,
+                                                                              data_path=data_path)
+
+    cfg.eval.dataset_names = ["industry-benchmark"]
     cfg.visualization.eval.path_to_save_detections = 'detections'
-    dataloaders_eval = build_eval_dataloaders_from_cfg(cfg, box_coder, img_normalization,
-                                                       datasets_for_eval=[],
-                                                       data_path=data_path)
+    #dataloaders_eval = build_eval_dataloaders_from_cfg(cfg, box_coder, img_normalization,
+    #                                                   datasets_for_eval=[],
+    #                                                   data_path=data_path)
 
     # start training (validation is inside)
-    #trainval_loop(dataloader_train, net, cfg, criterion, optimizer, dataloaders_eval=dataloaders_eval)
-    evaluate(dataloaders_eval[0], net, cfg, criterion, print_per_class_results=True)
+    trainval_loop(dataloader_train, net, cfg, criterion, optimizer, dataloaders_eval=[])#dataloaders_eval)
+    #evaluate(dataloaders_eval[0], net, cfg, criterion, print_per_class_results=True)
 if __name__ == "__main__":
     main()

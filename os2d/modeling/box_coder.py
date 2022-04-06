@@ -221,13 +221,13 @@ class Os2dBoxCoder:
         index = matcher(ious)
 
         # assign difficult flags
-        class_difficult_flags = annotation_boxes.get_field("difficult")
+        #class_difficult_flags = annotation_boxes.get_field("difficult")
         good_index_mask = index >= 0
         if good_index_mask.any():
             good_index = good_index_mask.nonzero()
-            difficult_mask = class_difficult_flags[index[good_index]]
-            difficult_index = good_index[difficult_mask]
-            index[difficult_index] = -2
+            #difficult_mask = class_difficult_flags[index[good_index]]
+            #difficult_index = good_index[difficult_mask]
+            #index[difficult_index] = -2
 
         return index, ious
 
@@ -346,7 +346,7 @@ class Os2dBoxCoder:
           loc_targets (tensor) - encoded bounding boxes, sized num_labels x 4 x num_anchors
           cls_targets (tensor) - encoded class labels, sized num_labels x num_anchors
         """
-        difficult_flags = boxes.get_field("difficult")
+        #difficult_flags = boxes.get_field("difficult")
         labels = boxes.get_field("labels")
 
         default_boxes = self._get_default_boxes(img_size)

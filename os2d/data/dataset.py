@@ -78,13 +78,20 @@ def build_eval_dataset(data_path, name, eval_scale, cache_images=False, no_image
         image_path = os.path.join(data_path, "LigiLog-100", "src", "images")
         gtboxframe = read_annotation_file(classdatafile)
         gt_path = os.path.join(data_path, "LigiLog-100", annotation_folder, "images")
-    elif "logodet-3k" in name.lower():
+    elif "val-logodet3k" in name.lower():
         annotation_folder="classes"
         image_size = 1280
-        classdatafile = os.path.join(data_path, "LogoDet-3K_os2d", annotation_folder,"logodet3k.csv")
-        image_path = os.path.join(data_path, "LogoDet-3K_os2d", "src", "images")
+        classdatafile = os.path.join(data_path, "val-logodet3k", annotation_folder,"val-annotations.csv")
+        image_path = os.path.join(data_path, "val-logodet3k", "src", "images")
         gtboxframe = read_annotation_file(classdatafile)
-        gt_path = os.path.join(data_path, "LogoDet-3K_os2d", annotation_folder, "images")
+        gt_path = os.path.join(data_path, "val-logodet3k", annotation_folder, "images")
+    elif "train-logodet3k" in name.lower():
+        annotation_folder="classes"
+        image_size = 1280
+        classdatafile = os.path.join(data_path, "train-logodet3k", annotation_folder,"train-annotations.csv")
+        image_path = os.path.join(data_path, "train-logodet3k", "src", "images")
+        gtboxframe = read_annotation_file(classdatafile)
+        gt_path = os.path.join(data_path, "train-logodet3k", annotation_folder, "images")
     else:
         raise(RuntimeError("Unknown dataset {0}".format(name)))
 

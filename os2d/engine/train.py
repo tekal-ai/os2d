@@ -78,6 +78,9 @@ def train_one_batch(batch_data, net, cfg, criterion, optimizer, dataloader, logg
     images, class_images, loc_targets, class_targets, class_ids, class_image_sizes, \
         batch_box_inverse_transform, batch_boxes, batch_img_size = \
         prepare_batch_data(batch_data, cfg.is_cuda, logger)
+    print(type(images),type(class_images),type(loc_targets),type(class_targets),type(class_ids),type(class_image_sizes))
+    print(class_ids)
+    asdf
 
     loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
         net(images, class_images,

@@ -176,13 +176,13 @@ class DataloaderOneShotDetection():
         # select what to do with data augmentation
         if  do_augmentation:
             self.data_augmentation = DataAugmentation(random_flip_batches=random_flip_batches,
-                                                      random_crop_size=random_crop_size,
-                                                      random_crop_scale=random_crop_scale,
-                                                      jitter_aspect_ratio=jitter_aspect_ratio,
-                                                      scale_jitter=scale_jitter,
-                                                      random_color_distortion=random_color_distortion,
-                                                      random_crop_label_images=random_crop_class_images,
-                                                      min_box_coverage=min_box_coverage)
+                                          random_crop_size=random_crop_size,
+                                          random_crop_scale=random_crop_scale,
+                                          jitter_aspect_ratio=jitter_aspect_ratio,
+                                          scale_jitter=scale_jitter,
+                                          random_color_distortion=random_color_distortion,
+                                          random_crop_label_images=random_crop_class_images,
+                                          min_box_coverage=min_box_coverage)
 
             # if doing random crop data augmentation there is no need to use buckets - all images will be cropped to the same size      
             self.use_buckets = False if random_crop_size is not None else True            
@@ -280,6 +280,7 @@ class DataloaderOneShotDetection():
         num_pyramid_levels = len(pyramid_scales)
 
         use_mined_crop = mined_data is not None
+
         if use_mined_crop:
             crop_position = mined_data["crop_position_xyxy"]
 
