@@ -16,18 +16,6 @@ import torchvision.transforms as transforms
 from os2d.structures.bounding_box import BoxList
 from os2d.structures.transforms import TransformList, crop
 
-cfg.init.model = "best_os2d_checkpoint.pth"
-cfg.is_cuda = torch.cuda.is_available()
-cfg.train.batch_size = 1
-# set this to use faster convolutions
-if cfg.is_cuda:
-    assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
-    torch.backends.cudnn.benchmark = True
-
-# random seed
-set_random_seed(cfg.random_seed, cfg.is_cuda)
-
-net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
 
 class SyntheticAugmentationsDataset(Dataset):
     def __init__(self, reference_path, logo_path, box_coder):
