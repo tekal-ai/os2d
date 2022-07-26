@@ -144,10 +144,10 @@ class SyntheticAugmentationsDataset(Dataset):
         
         # prepare class images
         num_classes = 1
-        logo_th = self._transform_image_gt(class_img, hflip=hflip, vflip=vflip)
+        class_th = self._transform_image_gt(class_img, hflip=hflip, vflip=vflip)
 
         # get the image sizes after resize in self._transform_image_gt, format - width, height
-        logo_size = FeatureMapSize(img=class_img)
+        class_size = FeatureMapSize(img=class_img)
        
         # get annotation
         fm_size = FeatureMapSize(img=reference_image)
@@ -169,7 +169,7 @@ class SyntheticAugmentationsDataset(Dataset):
         boxes.get_field("labels")[mask_cutoff_boxes] = -2
         loc_targets, class_targets = box_coder.encode(boxes, img_size, num_classes)
         
-        return reference_image_th, logo_th, loc_targets, class_targets, class_id, logo_size, \
+        return reference_image_th, class_th, loc_targets, class_targets, class_id, class_size, \
                box_inverse_transform, boxes, img_size 
     
     def _transform_image_gt(self, img, do_augmentation=True, hflip=False, vflip=False, do_resize=True):
