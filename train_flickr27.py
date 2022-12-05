@@ -34,13 +34,11 @@ imgspath = '../../data/flickr_logos_27_dataset/flickr_logos_27_dataset_images'
 querypath = '../../data/flickr_logos_27_dataset/flickr_logos_27_class_images'
 anns_path = '../../data/flickr_logos_27_dataset/annotations.csv'
 
+cpt_path = "alternating-models/checkpoint_iter_12500.pth"
+output_path = 'flickr27-models'
+
 anns_df = pd.read_csv(anns_path)
 train_df = anns_df
-#imageids = np.unique(anns_df['imageid'])
-#mask = np.arange(len(imageids)) % 10 != 0
-#train_ids = imageids[mask]
-#train_df = anns_df[anns_df['imageid'].isin(list(train_ids))]
-#print(train_df.shape)
 
 cfg.is_cuda = torch.cuda.is_available()
 cfg.train.batch_size = 1
@@ -53,7 +51,7 @@ if cfg.is_cuda:
 set_random_seed(cfg.random_seed, cfg.is_cuda)
 
 # Model
-cfg.init.model = "alternating-models/checkpoint_iter_12500.pth"
+cfg.init.model = cpt_path
 
 net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
 transform_image = transforms.Compose([
@@ -74,7 +72,7 @@ data_augmentation = DataAugmentation(random_flip_batches=False,
                                       min_box_coverage=0.7)
 
 cfg.output.save_iter = 809
-cfg.output.path = 'flickr27-models'
+cfg.output.path = output_path
 cfg.eval.iter = 5000
 cfg.train.optim.max_iter = 100000#len(train_df['imageid'])
 

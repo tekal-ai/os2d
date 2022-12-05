@@ -1,14 +1,14 @@
 # This is the script used to train OS2D with the LITW dataset and with Keymakr data
 # Set the data paths below:
 
-dataset_type = "keymakr"  # 'litw' or 'keymakr'
+dataset_type = "litw" # 'litw' or 'keymakr'
 
-imgspath = '../../data/keymakr-os2d/assets'  # path to reference images
-querypath = '../../data/keymakr-os2d/logos'  # path to class images
-anns_path = '../../data/keymakr-os2d/train_annotations.csv'  # path to annotations
+imgspath = '../../data/LogosInTheWild-v2/cleaned-data/voc_format' # path to reference images
+querypath = '../../data/LogosInTheWild-v2/cleaned-data/brandROIs' # path to class images
+anns_path = '../../data/LogosInTheWild-v2/cleaned-data/annotations.csv' # path to annotations
 
-cpt_path = "best_os2d_checkpoint.pth"  # checkpoint to start from
-output_path = 'keymakr_cpts'  # folder to save checkpoints in
+cpt_path = "key950/checkpoint_iter_41000.pth" # checkpoint to start from
+output_path = 'litw-key950' # folder to save checkpoints in
 
 import os
 import pandas as pd
@@ -26,13 +26,11 @@ import pickle
 import random
 import matplotlib.patches as patches
 from os2d.modeling.model import build_os2d_from_config
-import wandb
+
 from os2d.data.dataloader import build_eval_dataloaders_from_cfg, build_train_dataloader_from_config
 from os2d.engine.train import trainval_loop
 from os2d.engine.evaluate import evaluate
-from os2d.utils import log_meters, checkpoint_model, set_random_seed, add_to_meters_in_dict, print_meters, \
-    get_trainable_parameters, mkdir, save_config, setup_logger, get_data_path, read_image, \
-    get_image_size_after_resize_preserving_aspect_ratio
+from os2d.utils import log_meters, checkpoint_model, set_random_seed, add_to_meters_in_dict, print_meters, get_trainable_parameters, mkdir, save_config, setup_logger, get_data_path, read_image, get_image_size_after_resize_preserving_aspect_ratio
 from os2d.engine.optimization import create_optimizer
 from os2d.config import cfg
 from os2d.structures.feature_map import FeatureMapSize
@@ -43,23 +41,22 @@ import os2d.utils.visualization as visualizer
 import os2d.structures.transforms as transforms_boxes
 from os2d.engine.optimization import setup_lr, get_learning_rate, set_learning_rate
 
-wandb.login()
-
 anns_df = pd.read_csv(anns_path)
 
 if dataset_type == "keymakr":
-    anns_df = anns_df[anns_df["name"] != "Revitalift_de_L'Oreal_Paris"]
-    anns_df = anns_df[anns_df["name"] != "Elvive"]
-    anns_df = anns_df[anns_df["name"] != "Excellence_Creme"]
-    anns_df = anns_df[anns_df["name"] != "Magic_Retouch"]
-
+  anns_df = anns_df[anns_df["name"] != "Revitalift_de_L'Oreal_Paris"]
+  anns_df = anns_df[anns_df["name"] != "Elvive"]
+  anns_df = anns_df[anns_df["name"] != "Excellence_Creme"]
+  anns_df = anns_df[anns_df["name"] != "Magic_Retouch"]
+ 
 if dataset_type == "litw":
-    imageids = np.unique(anns_df['imageid'])
-    mask = np.arange(len(imageids)) % 10 != 0
-    train_ids = imageids[mask]
-    train_df = anns_df[anns_df['imageid'].isin(list(train_ids))]
-else:
-    train_df = anns_df
+  imageids = np.unique(anns_df['imageid'])
+  mask = np.arange(len(imageids)) % 10 != 0
+  train_ids = imageids[mask]
+  train_df = anns_df[anns_df['imageid'].isin(list(train_ids))]
+ else:
+  train_df = anns_df
+
 
 cfg.is_cuda = torch.cuda.is_available()
 cfg.train.batch_size = 1
@@ -77,28 +74,26 @@ cfg.train.optim.lr = 1e-4
 
 net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
 transform_image = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(img_normalization["mean"], img_normalization["std"])
-])
+                  transforms.ToTensor(),
+                  transforms.Normalize(img_normalization["mean"], img_normalization["std"])
+                  ])
 
 parameters = get_trainable_parameters(net)
 optimizer = create_optimizer(parameters, cfg.train.optim, optimizer_state)
 
 data_augmentation = DataAugmentation(random_flip_batches=False,
-                                     random_crop_size=FeatureMapSize(w=600, h=600),
-                                     random_crop_scale=0.39215686274509803,
-                                     jitter_aspect_ratio=0.9,
-                                     scale_jitter=0.7,
-                                     random_color_distortion=True,
-                                     random_crop_label_images=False,
-                                     min_box_coverage=0.7)
+                                      random_crop_size=FeatureMapSize(w=600, h=600),
+                                      random_crop_scale=0.39215686274509803,
+                                      jitter_aspect_ratio=0.9,
+                                      scale_jitter=0.7,
+                                      random_color_distortion=True,
+                                      random_crop_label_images=False,
+                                      min_box_coverage=0.7)
 
 cfg.output.save_iter = 1000
 cfg.output.path = output_path
 cfg.eval.iter = 5000
 cfg.train.optim.max_iter = 100000
-
-wandb.init(project="os2d-keymakr10k")
 
 def get_litw_batch(i_batch):
     idx_0 = i_batch * cfg.train.batch_size
@@ -106,7 +101,6 @@ def get_litw_batch(i_batch):
     ids = [np.unique(train_df['imageid'])[idx] for idx in idxs]
     batch_data = _prepare_batch(ids)
     return batch_data
-
 
 def trainval_loop2():
     # setup the learning rate schedule
@@ -123,7 +117,7 @@ def trainval_loop2():
     t0 = time.time()
     for i_iter in range(cfg.train.optim.max_iter):
         t1 = time.time()
-        ts.append(t1 - t0)
+        ts.append(t1-t0)
         t0 = t1
         if i_iter % 25 == 0:
             print(i_iter, np.mean(ts))
@@ -134,15 +128,16 @@ def trainval_loop2():
 
         # get data for training
         t_start_loading = time.time()
-        # try:
+        #try:
         batch_data = get_litw_batch(i_batch)
-        # except:
+        #except:
         #    i_batch += 1
         #    print(f"skipping {i_batch}")
         #    continue
 
         i_batch += 1
         t_data_loading = time.time() - t_start_loading
+
 
         # train on one batch
         meters = train_one_batch(batch_data, net, cfg, criterion, optimizer)
@@ -157,13 +152,12 @@ def trainval_loop2():
     if cfg.output.path:
         checkpoint_model(net, optimizer, cfg.output.path, cfg.is_cuda, i_iter=cfg.train.optim.max_iter)
 
-
 def prepare_batch_data(batch_data, is_cuda):
     """Helper function to parse batch_data and put tensors on a GPU.
     Used in train_one_batch
     """
     images, class_images, loc_targets, class_targets, class_ids, class_image_sizes, \
-    batch_box_inverse_transform, batch_boxes, batch_img_size = \
+        batch_box_inverse_transform, batch_boxes, batch_img_size = \
         batch_data
     if is_cuda:
         images = images.cuda()
@@ -172,8 +166,7 @@ def prepare_batch_data(batch_data, is_cuda):
         class_targets = class_targets.cuda()
 
     return images, class_images, loc_targets, class_targets, class_ids, class_image_sizes, \
-           batch_box_inverse_transform, batch_boxes, batch_img_size
-
+        batch_box_inverse_transform, batch_boxes, batch_img_size
 
 def train_one_batch(batch_data, net, cfg, criterion, optimizer):
     t_start_batch = time.time()
@@ -185,8 +178,8 @@ def train_one_batch(batch_data, net, cfg, criterion, optimizer):
     optimizer.zero_grad()
 
     images, class_images, loc_targets, class_targets, class_ids, class_image_sizes, \
-    batch_box_inverse_transform, batch_boxes, batch_img_size = \
-        prepare_batch_data(batch_data, cfg.is_cuda)
+        batch_box_inverse_transform, batch_boxes, batch_img_size  = \
+            prepare_batch_data(batch_data, cfg.is_cuda)
 
     loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
         net(images, class_images,
@@ -203,7 +196,7 @@ def train_one_batch(batch_data, net, cfg, criterion, optimizer):
 
     main_loss = losses["loss"]
     main_loss.backward()
-    wandb.log({"main_loss": main_loss})
+
 
     # save full grad
     grad = OrderedDict()
@@ -211,18 +204,18 @@ def train_one_batch(batch_data, net, cfg, criterion, optimizer):
         if param.requires_grad and param.grad is not None:
             grad[name] = param.grad.clone().cpu()
 
-    grad_norm = torch.nn.utils.clip_grad_norm_(get_trainable_parameters(net), cfg.train.optim.max_grad_norm,
-                                               norm_type=2)
+
+    grad_norm = torch.nn.utils.clip_grad_norm_(get_trainable_parameters(net), cfg.train.optim.max_grad_norm, norm_type=2)
     # save error state if grad appears to be nan
     if math.isnan(grad_norm):
         # remove some unsavable objects
         batch_data = [b for b in batch_data]
         batch_data[6] = None
 
-        data_nan = {"batch_data": batch_data, "state_dict": net.state_dict(), "optimizer": optimizer.state_dict(),
-                    "cfg": cfg, "grad": grad}
+        data_nan = {"batch_data":batch_data, "state_dict":net.state_dict(), "optimizer": optimizer.state_dict(),
+                    "cfg":cfg,  "grad": grad}
         time_stamp = datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d-%H:%M:%S")
-        dump_file = "error_nan_appeared-" + time_stamp + ".pth"
+        dump_file = "error_nan_appeared-"+time_stamp+".pth"
         if cfg.output.path:
             dump_file = os.path.join(cfg.output.path, dump_file)
 
@@ -239,24 +232,21 @@ def train_one_batch(batch_data, net, cfg, criterion, optimizer):
     meters["batch_time"] = time.time() - t_start_batch
     return meters
 
-
 def get_class_images_and_sizes(class_ids):
     class_images = []
     class_image_sizes = []
     all_class_ids = []
     for class_id in class_ids:
         images = []
-        # for img in os.listdir(f'{querypath}/{class_id}'):
+        #for img in os.listdir(f'{querypath}/{class_id}'):
         #    if image[-4:] == '.jpg':
         #        images.append(Image.open(f'{querypath}/{class_id}/{image}'))
-        # print(class_id)
-        images = [Image.open(f'{querypath}/{class_id}/{image}').convert("RGB") for image in
-                  os.listdir(f'{querypath}/{class_id}') if
-                  image[-4:] == '.jpg' or image[-4:] == '.png' or image[-5:] == 'jpeg']
+        #print(class_id)
+        images = [Image.open(f'{querypath}/{class_id}/{image}').convert("RGB") for image in os.listdir(f'{querypath}/{class_id}') if image[-4:] == '.jpg' or image[-4:] == '.png' or image[-5:] == 'jpeg']
         choice = random.choice(images)
-        # fig = plt.figure()
-        # plt.imshow(choice)
-        # plt.show()
+        #fig = plt.figure()
+        #plt.imshow(choice)
+        #plt.show()
         class_images.append(choice)
 
     class_image_sizes = [FeatureMapSize(img=img) for img in class_images]
@@ -264,6 +254,7 @@ def get_class_images_and_sizes(class_ids):
 
 
 def _transform_image_gt(img, do_augmentation=True, hflip=False, vflip=False, do_resize=True):
+
     # batch level data augmentation
     img, _ = transforms_boxes.transpose(img, hflip=hflip, vflip=vflip, boxes=None, transform_list=None)
 
@@ -280,17 +271,16 @@ def _transform_image_gt(img, do_augmentation=True, hflip=False, vflip=False, do_
         # get the new size - while preserving aspect ratio
         size_old = FeatureMapSize(img=img)
         h, w = get_image_size_after_resize_preserving_aspect_ratio(h=size_old.h, w=size_old.w,
-                                                                   target_size=240)
+            target_size=240)
         size_new = FeatureMapSize(w=w, h=h)
 
-        img, _ = transforms_boxes.resize(img, target_size=size_new, random_interpolation=random_interpolation)
+        img, _  = transforms_boxes.resize(img, target_size=size_new, random_interpolation=random_interpolation)
 
     transforms_th = [transforms.ToTensor()]
     if img_normalization is not None:
         transforms_th += [transforms.Normalize(img_normalization["mean"], img_normalization["std"])]
     img = transforms.Compose(transforms_th)(img)
     return img
-
 
 def get_boxes_from_image_dataframe(image_data, image_size):
     if not image_data.empty:
@@ -316,13 +306,12 @@ def get_boxes_from_image_dataframe(image_data, image_size):
     boxes.add_field("labels_original", label_ids_global)
     return boxes
 
-
 def convert_label_ids_global_to_local(label_ids_global, class_ids):
-    label_ids_local = []  # local indices w.r.t. batch_class_images
+    label_ids_local = [] # local indices w.r.t. batch_class_images
     if label_ids_global is not None:
         for label_id in label_ids_global:
             label_id = label_id.item()
-            label_ids_local.append(class_ids.index(label_id) if label_id in class_ids else -1)
+            label_ids_local.append( class_ids.index(label_id) if label_id in class_ids else -1 )
     label_ids_local = torch.tensor(label_ids_local, dtype=torch.long)
     return label_ids_local
 
@@ -332,15 +321,14 @@ def update_box_labels_to_local(boxes, class_ids):
     label_ids_local = convert_label_ids_global_to_local(label_ids_global, class_ids)
     boxes.add_field("labels", label_ids_local)
 
-
 def _transform_image_to_pyramid(image_id, boxes=None,
-                                do_augmentation=True, hflip=False, vflip=False,
-                                pyramid_scales=(1,),
-                                mined_data=None):
-    # print(image_id)
-    # fig = plt.figure()
+                                      do_augmentation=True, hflip=False, vflip=False,
+                                      pyramid_scales=(1,),
+                                      mined_data=None ):
+    #print(image_id)
+    #fig = plt.figure()
     img = Image.open(f'{imgspath}/{image_id}').convert("RGB")
-    # plt.show()
+    #plt.show()
     img_size = FeatureMapSize(img=img)
 
     num_pyramid_levels = len(pyramid_scales)
@@ -356,12 +344,13 @@ def _transform_image_to_pyramid(image_id, boxes=None,
                                             boxes=boxes,
                                             transform_list=box_inverse_transform)
 
+
     if do_augmentation:
         if data_augmentation.do_random_crop:
             img, boxes, mask_cutoff_boxes, mask_difficult_boxes = \
-                data_augmentation.random_crop(img,
-                                              boxes=boxes,
-                                              transform_list=box_inverse_transform)
+                        data_augmentation.random_crop(img,
+                                                           boxes=boxes,
+                                                           transform_list=box_inverse_transform)
 
             img, boxes = transforms_boxes.resize(img, target_size=data_augmentation.random_crop_size,
                                                  random_interpolation=data_augmentation.random_interpolation,
@@ -373,7 +362,7 @@ def _transform_image_to_pyramid(image_id, boxes=None,
 
     random_interpolation = data_augmentation.random_interpolation
     img_size = FeatureMapSize(img=img)
-    pyramid_sizes = [FeatureMapSize(w=int(img_size.w * s), h=int(img_size.h * s)) for s in pyramid_scales]
+    pyramid_sizes = [ FeatureMapSize(w=int(img_size.w * s), h=int(img_size.h * s)) for s in pyramid_scales ]
     img_pyramid = []
     boxes_pyramid = []
     pyramid_box_inverse_transform = []
@@ -384,24 +373,25 @@ def _transform_image_to_pyramid(image_id, boxes=None,
                                                  transform_list=box_inverse_transform_this_scale)
 
         pyramid_box_inverse_transform.append(box_inverse_transform_this_scale)
-        img_pyramid.append(p_img)
-        boxes_pyramid.append(p_boxes)
+        img_pyramid.append( p_img )
+        boxes_pyramid.append( p_boxes )
 
     transforms_th = [transforms.ToTensor()]
     if img_normalization is not None:
         transforms_th += [transforms.Normalize(img_normalization["mean"], img_normalization["std"])]
 
     for i_p in range(num_pyramid_levels):
-        img_pyramid[i_p] = transforms.Compose(transforms_th)(img_pyramid[i_p])
+        img_pyramid[i_p] = transforms.Compose(transforms_th)( img_pyramid[i_p] )
 
     return img_pyramid, boxes_pyramid, mask_cutoff_boxes, mask_difficult_boxes, pyramid_box_inverse_transform
 
 
+
 def _transform_image(image_id, boxes=None, do_augmentation=True, hflip=False, vflip=False, mined_data=None):
     img_pyramid, boxes_pyramid, mask_cutoff_boxes, mask_difficult_boxes, pyramid_box_inverse_transform = \
-        _transform_image_to_pyramid(image_id, boxes=boxes,
-                                    do_augmentation=do_augmentation, hflip=hflip, vflip=vflip,
-                                    pyramid_scales=(1,), mined_data=mined_data)
+            _transform_image_to_pyramid(image_id, boxes=boxes,
+                                             do_augmentation=do_augmentation, hflip=hflip, vflip=vflip,
+                                             pyramid_scales=(1,), mined_data=mined_data)
 
     return img_pyramid[0], boxes_pyramid[0], mask_cutoff_boxes, mask_difficult_boxes, pyramid_box_inverse_transform[0]
 
@@ -431,7 +421,7 @@ def _prepare_batch(image_ids, use_all_labels=False):
     class_ids = class_ids[:max_batch_labels - len(mined_labels)]
 
     class_ids = np.concatenate((class_ids, np.array(mined_labels).astype(class_ids.dtype)), axis=0)
-    class_ids = list(class_ids)  # sorted(list(class_ids))
+    class_ids = list(class_ids)#sorted(list(class_ids))
 
     # decide on batch level data augmentation
     batch_vflip = random.random() < 0.5 if data_augmentation.batch_random_vflip else False
@@ -452,7 +442,7 @@ def _prepare_batch(image_ids, use_all_labels=False):
     for image_id in image_ids:
         # get annotation
         fm_size = FeatureMapSize(Image.open(f'{imgspath}/{image_id}').convert("RGB"))
-        boxes = get_boxes_from_image_dataframe(batch_data[batch_data['imageid'] == image_id], fm_size)
+        boxes = get_boxes_from_image_dataframe(batch_data[batch_data['imageid']  == image_id], fm_size)
 
         # convert global indices to local
         # if use_global_labels==False then local indices will be w.r.t. labels in this batch
@@ -462,7 +452,7 @@ def _prepare_batch(image_ids, use_all_labels=False):
         # prepare image and boxes: convert image to tensor, data augmentation: some boxes might be cut off the image
         image_mined_data = None
         img, boxes, mask_cutoff_boxes, mask_difficult_boxes, box_inverse_transform = \
-            _transform_image(image_id, boxes, hflip=batch_hflip, vflip=batch_vflip, mined_data=image_mined_data)
+                 _transform_image(image_id, boxes, hflip=batch_hflip, vflip=batch_vflip, mined_data=image_mined_data)
         if boxes.has_field("difficult"):
             old_difficult = boxes.get_field("difficult")
             boxes.add_field("difficult", old_difficult | mask_difficult_boxes)
@@ -478,7 +468,7 @@ def _prepare_batch(image_ids, use_all_labels=False):
         batch_loc_targets.append(loc_targets)
         batch_class_targets.append(class_targets)
         batch_images.append(img)
-        batch_box_inverse_transform.append([box_inverse_transform])
+        batch_box_inverse_transform.append( [box_inverse_transform] )
         batch_boxes.append(boxes)
         batch_img_size.append(img_size)
 
@@ -489,6 +479,5 @@ def _prepare_batch(image_ids, use_all_labels=False):
 
     return batch_images, batch_class_images, batch_loc_targets, batch_class_targets, class_ids, class_image_sizes, \
            batch_box_inverse_transform, batch_boxes, batch_img_size
-
 
 trainval_loop2()

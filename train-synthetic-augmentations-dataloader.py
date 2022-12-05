@@ -93,7 +93,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
     return np.mean(eval_losses)
 
 
-def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):#, anneal_lr_func):
+def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):
     global i_iter
     net.train(freeze_bn_in_extractor=cfg.train.model.freeze_bn,
               freeze_transform_params=cfg.train.model.freeze_transform,
@@ -117,7 +117,6 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):#, annea
             class_targets = class_targets.cuda()
 
         optimizer.zero_grad()
-        #print(images.shape)
         loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
             net(images, class_images,
                 train_mode=True,
@@ -132,12 +131,6 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):#, annea
 
         main_loss = losses["loss"]
         main_loss.backward()
-
-        #lr = anneal_lr_func(i_iter + 1, anneal_now=i_iter > cfg.train.optim.anneal_lr.initial_patience)
-
-        #if cfg.train.optim.anneal_lr.reload_best_model_after_anneal_lr and lr != get_learning_rate(optimizer):
-        #    print("Annealing...")
-        #    set_learning_rate(optimizer, lr)
 
 
         train_losses.append(main_loss.item())
@@ -156,10 +149,6 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):#, annea
         else:
             optimizer.step()
 
-        # save intermediate model
-        #if cfg.output.path and cfg.output.save_iter and i_iter % cfg.output.save_iter == 0:
-        #    print("Saving...")
-        #    checkpoint_model(net, optimizer, cfg.output.path, cfg.is_cuda, i_iter=i_iter, experiment_name=wandb.run.name)
         time1 = time.time()
         times.append(time1 - time0)
         time0 = time1
@@ -169,8 +158,6 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):#, annea
 
 def main():
     cfg.init.model = "best_os2d_checkpoint.pth"
-    #cfg.init.model = "litw-models-4/checkpoint_iter_45000.pth"
-    #cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
     cfg.num_epochs = 10

@@ -23,20 +23,11 @@ import matplotlib.pyplot as plt
 import  os2d.utils.visualization as visualizer
 
 
-#imgspath = '../../data/KEY-100/images'
-#imgspath = "../../data/LogosInTheWild-v2/cleaned-data/voc_format"
-imgspath = "../../data/KEY-950/assets"
-#querypath = '../../data/KEY-100/classes'
-#querypath = "../../data/LogosInTheWild-v2/cleaned-data/brandROIs"
-querypath = "../../data/KEY-950/logos"
-#annspath = '../../data/KEY-100/annotations.csv'
-#annspath = '../../data/LogosInTheWild-v2/cleaned-data/annotations.csv'
-annspath = '../../data/KEY-950/annotations.csv'
-#save_path = 'detections/ligilog100_best7.pth'
-#save_path = "litw_detections.pth"
-save_path = "key950_detections.pth"
-#cpt_path = "litw-models/litw-94/checkpoint_iter_45000.pth"
-cpt_path = 'keymakr_cpts/checkpoint_proud-disco-13_30856.pth'
+imgspath = '../../data/KEY-100/images'
+querypath = '../../data/KEY-100/classes'
+annspath = '../../data/KEY-100/annotations.csv'
+save_path = 'detections/ligilog100_best7.pth'
+cpt_path = "litw-models/litw-94/checkpoint_iter_45000.pth"
 
 dataset_type = "keymakr" # keymakr or litw
 
@@ -165,11 +156,11 @@ for imageid in imageids:
     if has_zero:
         print(f"Skipping {i}")
         continue
-    print('HERE', imageid)
     class_ids = np.unique(imgdf['classid'])
     image_ids.append(imageid)
     boxes.append(generate_predictions(img, class_imgs))
-    print(imageid, class_ids, boxes[-1])
+    print(imageid, class_ids, generate_predictions(img, class_imgs))
+    asdfg
     gt_boxes.append(gt_box)
     tnow = time.time()
     print(imageid, tnow - t0)
@@ -195,5 +186,3 @@ data = {"image_ids" : image_ids,
         "gt_boxes_xyxy" : [bb.bbox_xyxy for bb in gt_boxes],
         "gt_labels" : gt_labels
         }
-
-torch.save(data, save_path)
