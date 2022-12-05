@@ -59,7 +59,6 @@ class ResNetFeatureExtractor(ResNet):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-
         for layer in self.resnet_blocks:
             x = layer(x)
         return x

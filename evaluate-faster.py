@@ -22,7 +22,7 @@ from os2d.structures.bounding_box import BoxList
 import matplotlib.pyplot as plt
 import  os2d.utils.visualization as visualizer
 
-
+logger = setup_logger("OS2D")
 
 def generate_predictions(input_image, class_images):
     h, w = get_image_size_after_resize_preserving_aspect_ratio(h=input_image.size[1],
@@ -78,7 +78,14 @@ def generate_predictions(input_image, class_images):
                                            transform_corners_pyramid=transform_corners_pyramid)
     return boxes
 
-cfg.init.model = "models/os2d_v2-train.pth"
+#cfg.init.model = "litw-83-3/checkpoint_iter_45000.pth"
+#cfg.init.model = "litw-models-4/checkpoint_iter_46000.pth"
+#cfg.init.model = "synthetic_augmentations_cpts/checkpoint_comic-galaxy-84_40228.pth"
+#cfg.init.model = "litw-94/checkpoint_iter_45000.pth"
+#cfg.init.model = "keymakr_cpts/checkpoint_proud-disco-13_30856.pth"
+cfg.init.model = "keymakr_cpts/checkpoint_rich-firebrand-14_30856.pth"
+#cfg.init.model = "models/os2d_v2-train.pth"
+#cfg.init.model = "trained-models/checkpoint_iter_30000.pth"
 cfg.is_cuda = torch.cuda.is_available()
 # set this to use faster convolutions
 if cfg.is_cuda:
@@ -89,37 +96,50 @@ if cfg.is_cuda:
 set_random_seed(cfg.random_seed, cfg.is_cuda)
 
 # Model
-cfg.init.model = "models/os2d_v2-train.pth"
 #cfg.model.backbone_arch = 'simclr'
 
 net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
 
-annspath = '../data/LogoDet-3K_os2d/val-logodet3k/classes/val-annotations.csv'
-imgspath = '../data/LogoDet-3K_os2d/val-logodet3k/src/images'
-querypath = '../data/LogoDet-3K_os2d/val-logodet3k/classes/images'
-save_path = 'detections/logodet3k_detections.pth'
+#imgspath = '../../data/LogosInTheWild-v2/cleaned-data/voc_format'
+#querypath = '../../data/LogosInTheWild-v2/cleaned-data/brandROIs'
+#annspath = '../../data/LogosInTheWild-v2/cleaned-data/annotations.csv'
+annspath = '../../data/LigiLog-100/classes/industry-benchmark.csv'
+imgspath = '../../data/LigiLog-100/src/images'
+querypath = '../../data/LigiLog-100/classes/images'
+#save_path = 'detections/ligilog100_best7.pth'
+save_path = "ligilog100_detections_2.pth"
+#annspath = '../../data/val-logodet3k/classes/val-annotations.csv'
+#imgspath = '../../data/val-logodet3k/src/images'
+#querypath = '../../data/val-logodet3k/classes/images'
+#save_path = 'detections/val-logodet3k_detections_litw30k.pth'
 
-anns = pd.read_csv(annspath)
+anns = pd.read_csv(annspath,sep=';')
 
 imageids = np.unique(anns['imageid'])
+
+mask = np.arange(len(imageids)) % 10 == 0
+train_ids = imageids[mask]
+#anns = anns[anns['imageid'].isin(list(train_ids))]
 
 boxes = []
 gt_boxes = []
 image_ids = []
 
 t0 = time.time()
-for imageid in imageids:
+i = 0
+for imageid in imageids[:5000]:
+    i += 1
+    if i % 25 == 0: print(i)
     image_ids.append(imageid)
-    imgdf = anns[anns['imageid'] == imageid]
+    imgdf = anns[anns['imageid'] == int(imageid)]
     img = Image.open(f'{imgspath}/{imageid}.jpg').convert("RGB")
     size = FeatureMapSize(img=img)
     gt_box_t = torch.tensor(np.array(anns[['lx','ty','rx','by']]))
     gt_box = BoxList(gt_box_t, size)
     gt_box.add_field('labels', torch.tensor(np.array(imgdf['classid'])))
-    
     class_ids = np.unique(imgdf['classid'])
     class_imgs = [Image.open(f'{querypath}/{classid}.jpg').convert("RGB") for classid in class_ids]
-    
+     
     boxes.append(generate_predictions(img, class_imgs))
     gt_boxes.append(gt_box)
     tnow = time.time()

@@ -48,7 +48,6 @@ def build_os2d_from_config(cfg):
                               neg_to_pos_ratio=cfg.train.objective.neg_to_pos_ratio,
                               rll_neg_weight_ratio=cfg.train.objective.rll_neg_weight_ratio)
     optimizer_state = net.init_model_from_file(cfg.init.model, init_affine_transform_path=cfg.init.transform)
-
     num_params, num_param_groups = count_model_parameters(net)
     logger.info("OS2D has {0} blocks of {1} parameters (before freezing)".format(num_param_groups, num_params))
 
@@ -298,49 +297,51 @@ class Os2dModel(nn.Module):
         3) if init_affine_transform_path is provided will try to additionally load the transformation model
             (CAREFUL! it will override weights from both (1) and (2))
         """
+        print("init_affine_transform_path", init_affine_transform_path is None)
         # read the checkpoint file
         optimizer = None
         try:
             if path:
-                self.logger.info("Reading model file {}".format(path))
+                print("Reading model file {}".format(path))
                 checkpoint = torch.load(path)
             else:
                 checkpoint = None
 
             if checkpoint and "net" in checkpoint:
                 self.load_state_dict(checkpoint["net"])
-                self.logger.info("Loaded complete model from checkpoint")
+                print("Loaded complete model from checkpoint")
             else:
-                self.logger.info("Cannot find 'net' in the checkpoint file")
+                print("Cannot find 'net' in the checkpoint file")
                 raise RuntimeError()
-
+            
+            print(checkpoint.keys(), "net" in checkpoint, "optimizer" in checkpoint)
             if checkpoint and "optimizer" in checkpoint:
                 optimizer = checkpoint["optimizer"]
-                self.logger.info("Loaded optimizer from checkpoint")
+                print("Loaded optimizer from checkpoint")
             else:
-                self.logger.info("Cannot find 'optimizer' in the checkpoint file. Initializing optimizer from scratch.")
+                print("Cannot find 'optimizer' in the checkpoint file. Initializing optimizer from scratch.")
 
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            self.logger.info("Failed to load the full model, trying to init feature extractors")
+            print("Failed to load the full model, trying to init feature extractors")
             self._load_network(self.net_label_features.net_class_features, path=path)
             if not self.merge_branch_parameters:
                 self._load_network(self.net_feature_maps, model_data=self.net_label_features.net_class_features.state_dict())
 
         if init_affine_transform_path:
             try:
-                self.logger.info("Trying to init affine transform from {}".format(init_affine_transform_path))
+                print("Trying to init affine transform from {}".format(init_affine_transform_path))
                 try:
                     model_data = torch.load(init_affine_transform_path)
                 except:
-                    self.logger.info("Could not read the model file {0}.".format(path))
+                    print("Could not read the model file {0}.".format(path))
                 assert hasattr(self, "os2d_head_creator") and hasattr(self.os2d_head_creator, "aligner") and hasattr(self.os2d_head_creator.aligner, "parameter_regressor"), "Need to have the affine regressor part to inialize it"
                 init_from_weakalign_model(model_data["state_dict"], None,
                                           affine_regressor=self.os2d_head_creator.aligner.parameter_regressor)
                 self.logger.info("Successfully initialized the affine transform from the provided weakalign model.")
             except:
-                self.logger.info("Could not init affine transform from {0}.".format(init_affine_transform_path))
+                print("Could not init affine transform from {0}.".format(init_affine_transform_path))
 
         return optimizer
 

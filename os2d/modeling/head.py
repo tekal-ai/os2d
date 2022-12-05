@@ -254,7 +254,6 @@ class Os2dHeadCreator(nn.Module):
             fm_ref_size = F.grid_sample(fm, resampling_grid, mode='bilinear', padding_mode='zeros', align_corners=True)
 
             feature_maps_ref_size.append(fm_ref_size)
-
         feature_maps_ref_size = torch.cat(feature_maps_ref_size, dim=0)
         return feature_maps_ref_size
 

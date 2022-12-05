@@ -27,15 +27,16 @@ import matplotlib.pyplot as plt
 import  os2d.utils.visualization as visualizer
 import os2d.structures.transforms as transforms_boxes
 from os2d.engine.optimization import setup_lr, get_learning_rate, set_learning_rate
+from torch.utils.data import Dataset, DataLoader
 
-imgspath = '../data/val-logodet3k/src/images'
-querypath = '../data/val-logodet3k/classes/images'
-annspath = '../data/val-logodet3k/classes/val-annotations.csv'
+imgspath = '../../data/train-logodet3k/src/images'
+querypath = '../../data/train-logodet3k/classes/images'
+annspath = '../../data/train-logodet3k/classes/train-annotations.csv'
 
 train_df = pd.read_csv(annspath)
 
-cfg.init.model = "models/os2d_v2-train.pth"
-cfg.is_cuda = torch.cuda.is_available()
+cfg.init.model = "best_os2d_checkpoint.pth"
+cfg.is_cuda = True
 cfg.train.batch_size = 1
 # set this to use faster convolutions
 if cfg.is_cuda:
@@ -46,7 +47,6 @@ if cfg.is_cuda:
 set_random_seed(cfg.random_seed, cfg.is_cuda)
 
 # Model
-cfg.init.model = "models/os2d_v2-train.pth"
 
 net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
 transform_image = transforms.Compose([
@@ -66,15 +66,20 @@ data_augmentation = DataAugmentation(random_flip_batches=False,
                                       random_crop_label_images=False,
                                       min_box_coverage=0.7)
 
-cfg.output.save_iter = 30000
+cfg.output.save_iter = 10000
 cfg.output.path = 'trained-models'
 cfg.eval.iter = 5000
-cfg.train.optim.max_iter = len(train_df)
+cfg.train.optim.max_iter = 1000000#3 * len(np.unique(train_df['imageid']))
+
+max_index = len(np.unique(train_df['imageid']))
 
 def get_batch(i_batch):
-    idxs = [np.unique(train_df['imageid'])[i_batch]]
-    batch_data = _prepare_batch(idxs)
+    idx_0 = i_batch * cfg.train.batch_size
+    idxs = range(idx_0, min(idx_0 + cfg.train.batch_size, max_index))
+    ids = [np.unique(train_df['imageid'])[idx] for idx in idxs]
+    batch_data = _prepare_batch(ids)
     return batch_data
+
 
 def trainval_loop2():
     # setup the learning rate schedule
@@ -87,19 +92,26 @@ def trainval_loop2():
     # start training
     i_epoch = 0
     i_batch = 0  # to start a new epoch at the first iteration
+    t0 = time.time()
+    ts = []
     for i_iter in range(cfg.train.optim.max_iter):
+        t1 = time.time()
+        ts.append(t1-t0)
+        t0 = t1
         if i_iter % 25 == 0: 
-            print(i_iter)
+            print(i_iter,np.mean(ts))
         # restart dataloader if needed
-        if i_batch >= len(train_df) // cfg.train.batch_size:
+        if i_batch >= max_index // cfg.train.batch_size:
             i_epoch += 1
             i_batch = 0
-            # shuffle dataset
-            dataloader_train.shuffle()
 
         # get data for training
         t_start_loading = time.time()
+        #try:
         batch_data = get_batch(i_batch)
+        #except:
+        #    print(f"Could not load images at i_iter={i_iter}")
+        #    continue
         
         t_data_loading = time.time() - t_start_loading
 
@@ -146,9 +158,6 @@ def train_one_batch(batch_data, net, cfg, criterion, optimizer):
     images, class_images, loc_targets, class_targets, class_ids, class_image_sizes, \
         batch_box_inverse_transform, batch_boxes, batch_img_size  = \
             prepare_batch_data(batch_data, cfg.is_cuda)
-    
-    images, class_images, loc_targets, class_targets, class_ids, class_image_sizes, \
-        batch_box_inverse_transform, batch_boxes, batch_img_size = batch_data
     
     
     loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
@@ -349,7 +358,6 @@ def _transform_image(image_id, boxes=None, do_augmentation=True, hflip=False, vf
 
     
 def _prepare_batch(image_ids, use_all_labels=False):
-    print(image_ids)
     batch_images = []
     batch_class_images = []
     batch_loc_targets = []

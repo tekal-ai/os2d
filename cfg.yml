@@ -1,0 +1,145 @@
+eval:
+  batch_size: 1
+  cache_images: false
+  class_image_augmentation: ''
+  dataset_names:
+  - grozi-val-new-cl
+  - grozi-val-old-cl
+  dataset_scales:
+  - 1280
+  iter: 5000
+  mAP_iou_thresholds:
+  - 0.5
+  nms_across_classes: false
+  nms_iou_threshold: 0.3
+  nms_score_threshold: -.inf
+  scales_of_image_pyramid:
+  - 0.5
+  - 0.625
+  - 0.8
+  - 1
+  - 1.2
+  - 1.4
+  - 1.6
+  train_subset_for_eval_size: 0
+init:
+  model: best_os2d_checkpoint2.pth
+  transform: ''
+is_cuda: true
+model:
+  backbone_arch: ResNet50
+  class_image_size: 240
+  merge_branch_parameters: true
+  normalization_mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  normalization_std:
+  - 0.229
+  - 0.224
+  - 0.225
+  use_group_norm: false
+  use_inverse_geom_model: true
+  use_simplified_affine_model: false
+num_epochs: 10
+output:
+  best_model:
+    dataset: ''
+    do_get_best_model: false
+    metric: mAP@0.50
+    mode: max
+  path: keymakr_cpts
+  print_iter: 1
+  save_iter: 1000
+  save_log_to_file: false
+random_seed: 42
+train:
+  augment:
+    jitter_aspect_ratio: 0.9
+    min_box_coverage: 0.7
+    mine_extra_class_images: false
+    random_color_distortion: false
+    random_crop_class_images: false
+    random_flip_batches: false
+    scale_jitter: 0.7
+    train_patch_height: 600
+    train_patch_width: 600
+  batch_size: 1
+  cache_images: true
+  class_batch_size: 15
+  dataset_name: grozi-train
+  dataset_scale: 1280.0
+  do_training: true
+  mining:
+    do_mining: false
+    mine_hard_patches_iter: 5000
+    nms_iou_threshold_in_mining: 0.5
+    num_hard_patches_per_image: 10
+    num_random_negative_classes: 200
+    num_random_pyramid_scales: 2
+  model:
+    freeze_bn: true
+    freeze_bn_transform: true
+    freeze_transform: false
+    num_frozen_extractor_blocks: 0
+    train_features: true
+    train_transform_on_negs: false
+  objective:
+    class_neg_weight: 1.0
+    class_objective: RLL
+    loc_weight: 0.2
+    neg_margin: 0.5
+    neg_to_pos_ratio: 3
+    negative_iou_threshold: 0.1
+    pos_margin: 0.6
+    positive_iou_threshold: 0.5
+    remap_classification_targets: true
+    remap_classification_targets_iou_neg: 0.4
+    remap_classification_targets_iou_pos: 0.8
+    rll_neg_weight_ratio: 0.001
+  optim:
+    anneal_lr:
+      cooldown: 10000
+      gamma: 0.1
+      initial_patience: 0
+      milestones: []
+      min_value: 1.0e-05
+      patience: 1000
+      quantity_epsilon: 0.01
+      quantity_mode: max
+      quantity_smoothness: 2000
+      quantity_to_monitor: mAP@0.50_grozi-val-new-cl
+      reduce_factor: 0.5
+      reload_best_model_after_anneal_lr: true
+      type: none
+    lr: 0.0001
+    max_grad_norm: 100.0
+    max_iter: 200000
+    optim_method: sgd
+    sgd_momentum: 0.9
+    weight_decay: 0.0001
+visualization:
+  eval:
+    images_for_heatmaps: []
+    labels_for_heatmaps: []
+    max_detections: 10
+    path_to_save_detections: ''
+    score_threshold: -.inf
+    show_class_heatmaps: false
+    show_detections: false
+    show_gt_boxes: false
+  mining:
+    images_for_heatmaps: []
+    labels_for_heatmaps: []
+    max_detections: 10
+    score_threshold: -.inf
+    show_class_heatmaps: false
+    show_gt_boxes: false
+    show_mined_patches: false
+  train:
+    max_detections: 5
+    score_threshold: -.inf
+    show_detections: false
+    show_gt_boxes_dataloader: false
+    show_target_remapping: false
+
