@@ -33,7 +33,8 @@ class LITWDataset(Dataset):
     def __init__(self, reference_path, class_path, annotations_path, box_coder, train=True):
         self.reference_path = reference_path
         self.class_path = class_path
-        self.annotations_df = pd.read_csv(annotations_path, sep=";")
+        self.annotations_df = pd.read_csv(annotations_path)
+        print(self.annotations_df.columns)
         self.box_coder = box_coder
         if not train:
             fm_size = None
