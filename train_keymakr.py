@@ -91,7 +91,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
         eval_losses.append(losses["loss"].item())
-        wandb.log({"eval_loss": np.mean(eval_losses)})
+        # wandb.log({"eval_loss": np.mean(eval_losses)})
 
     return np.mean(eval_losses)
 
@@ -143,7 +143,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         #    set_learning_rate(optimizer, lr)
 
         train_losses.append(main_loss.item())
-        wandb.log({"train_loss": np.mean(train_losses)})
+        # wandb.log({"train_loss": np.mean(train_losses)})
         # save full grad
         grad = OrderedDict()
         for name, param in net.named_parameters():
@@ -207,10 +207,10 @@ def main():
     train_losses = []
     for i in range(cfg.num_epochs):
         train_loss = train_epoch(train_dataloader, net, box_coder, optimizer, criterion)  # , anneal_lr_func)
-        # wandb.log({'train_loss' : train_loss})
+        wandb.log({'train_loss' : train_loss})
 
         eval_loss = evaluate(eval_dataloader, net, box_coder, optimizer, criterion)
-        # wandb.log({'eval_loss' : eval_loss})
+        wandb.log({'eval_loss' : eval_loss})
 
         print(train_loss, eval_loss)
 
