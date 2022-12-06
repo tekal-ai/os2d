@@ -67,7 +67,7 @@ class LITWDataset(Dataset):
     def __getitem__(self, idx):
         imageid = self.annotations_df["imageid"].unique()[idx]
         idx_df = self.annotations_df[self.annotations_df["imageid"] == imageid]
-        reference_image = Image.open(os.path.join(self.reference_path, str(imageid)+".jpg")).convert("RGB")
+        reference_image = Image.open(os.path.join(self.reference_path, str(imageid))).convert("RGB")
         names = idx_df["name"].unique()
 
         class_images = []
