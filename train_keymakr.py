@@ -176,7 +176,7 @@ def main():
     # cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
-    cfg.num_epochs = 10
+    cfg.num_epochs = 25
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -184,7 +184,7 @@ def main():
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k")
+    wandb.init(project="os2d-keymakr10k", tags=["increase num epochs"])
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
@@ -214,5 +214,6 @@ def main():
 
         print(train_loss, eval_loss)
 
+    print("done")
 
 main()
