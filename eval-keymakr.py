@@ -87,7 +87,8 @@ def generate_predictions(input_image, class_images):
 def main():
     #cfg.init.model = "litw-models/litw-94/checkpoint_iter_45000.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_proud-disco-13_30856.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_rich-firebrand-14_30856.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_rich-firebrand-14_30856.pth"
+    cfg.init.model = "best_os2d_checkpoint.pth"
     cfg.is_cuda = torch.cuda.is_available()
     # set this to use faster convolutions
     if cfg.is_cuda:
@@ -103,17 +104,19 @@ def main():
     net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
 
     #annspath = "../../data/KEY-100/annotations.csv"
-    annspath = "../../data/LigiLog-100/classes/industry-benchmark.csv"
+    #annspath = "../../data/LigiLog-100/classes/industry-benchmark.csv"
     #annspath = "../../data/KEY-950/cleaned_annotations.csv"
     #querypath = "../../data/KEY-100/classes"
-    querypath = "../../data/LigiLog-100/classes/images/"
+    annspath = "../../data/KEY-950/annotations.csv"
+    querypath = "../../data/KEY-950/logos"
     #querypath = "../../data/KEY-950/logos"
     #imgspath = "../../data/KEY-100/images"
-    imgspath = "../../data/LigiLog-100/src/images"
-    #imgspath = "../../data/KEY-950/assets"
+    #imgspath = "../../data/LigiLog-100/src/images"
+    imgspath = "../../data/KEY-950/images"
     #save_path = 'detections/ligilog100_best7.pth'
-    save_path = "ligilog100_detections_2.pth"
+    #save_path = "ligilog100_detections_2.pth"
     #save_path = "key950_detections_2.pth"
+    save_path = "../../data/KEY-950/os2d_detections.pth"
 
     #anns = pd.read_csv(annspath)
     anns = pd.read_csv(annspath, sep=";")
