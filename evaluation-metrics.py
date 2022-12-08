@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     num_images = len(detections['scores'])
     import pandas as pd
-    df = pd.read_csv(ann_path, sep=";")
+    df = pd.read_csv(ann_path)
     print(df.columns)
     for iou_thres in iou_thres_ls:
         print('iou thres', iou_thres)
