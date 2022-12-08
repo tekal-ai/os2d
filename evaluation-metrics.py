@@ -21,11 +21,13 @@ import torchvision.transforms as transforms
 #     https://www.notion.so/tekalai/Keymakr-Proposal-930cbd6315cc42069b7a2c4c49d3d706
 
 #images_path = 'data/LogosInTheWild-v2/cleaned-data/voc_format'
+#images_path = "../KEY-950/images"
 images_path = "../../data/KEY-950/assets"
 #images_path = "../../data/KEY-100/images"
 #images_path = '../../data/LigiLog-100/src/images'
 #classes_path = 'data/LogosInTheWild-v2/cleaned-data/brandROIs'
 #ann_path = 'data/LogosInTheWild-v2/cleaned-data/annotations.csv'
+#ann_path = "../KEY-950/annotations_eval.csv"
 ann_path = "../../data/KEY-950/annotations_cleaned.csv"
 #ann_path = "../../data/KEY-100/annotations.csv"
 #ann_path = '../../data/LigiLog-100/classes/industry-benchmark.csv'
@@ -36,6 +38,8 @@ ann_path = "../../data/KEY-950/annotations_cleaned.csv"
 #detections_path = "ligilog100_detections_2.pth"
 #detections_path = "key950_detections_2.pth"
 detections_path = "../../data/KEY-950/os2d_detections.pth"
+#detections_path = "../KEY-950/gcc_detections_all.pth"
+#detections_path = "../KEY-950/gcc_detections_final.pth"
 
 def get_iou(bb1, bb2, coords_type='cxcywh'):
     """
@@ -186,15 +190,18 @@ if __name__ == "__main__":
     detections = torch.load(detections_path)
     #iou_thres = 0.5
     iou_thres_ls = [0.9, 0.8, 0.7, 0.6, 0.5]
+    colors = ["blue", "orange", "green", "red", "purple"]
     #confidence_thres = 0.75
     confidence_thres_ls = [0.9, 0.85, 0.8, 0.75, 0.7, 0.675, 0.65, 0.6375, 0.625, 0.6125, 0.6, 0.5875, 0.575, 0.5375, 0.55, 0.525, 0.5,
                            0.45, 0.35, 0.0]
+    plot_conf = [0.9, 0.8, 0.7, 0.6, 0.5]
+    plot_conf_idx = [0, 2, 4, 10, 16]
 
     num_images = len(detections['scores'])
     import pandas as pd
     df = pd.read_csv(ann_path)
     print(df.columns)
-    for iou_thres in iou_thres_ls:
+    for id, iou_thres in enumerate(iou_thres_ls):
         print('iou thres', iou_thres)
 
         recalls = []
@@ -257,14 +264,20 @@ if __name__ == "__main__":
         #print(precisions)
 
         # create precision recall curve
-        ax.plot(recalls, precisions, label=iou_thres)
+        recalls_pts = [r for i, r in enumerate(recalls) if i in plot_conf_idx]
+        precisions_pts = [r for i, r in enumerate(precisions) if i in plot_conf_idx]
+        ax.plot(recalls, precisions, label=iou_thres, color=colors[id])
+        #ax.plot(recalls_pts, precisions_pts, marker='o', color=colors[id])
+        for conf, recall_pt, precision_pt in zip(plot_conf, recalls_pts, precisions_pts):
+            ax.plot(recall_pt, precision_pt, marker='o', color=colors[id])
+            plt.text(recall_pt, precision_pt, conf, fontsize=10, color=colors[id])
 
     # add axis labels to plot
-    ax.set_title('KEY-950 with os2d')
+    ax.set_title('KEY-950 with gcc')
     ax.set_ylabel('Precision')
     ax.set_xlabel('Recall')
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper left", title="IOU thresholds")
 
     # display plot
     #plt.show()
-    plt.savefig("../../data/KEY-950/os2d_eval.png")
+    plt.savefig("../KEY-950/gcc_eval_final.png")
