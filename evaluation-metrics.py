@@ -21,20 +21,21 @@ import torchvision.transforms as transforms
 #     https://www.notion.so/tekalai/Keymakr-Proposal-930cbd6315cc42069b7a2c4c49d3d706
 
 #images_path = 'data/LogosInTheWild-v2/cleaned-data/voc_format'
-#images_path = "../../data/KEY-950/assets"
+images_path = "../../data/KEY-950/assets"
 #images_path = "../../data/KEY-100/images"
-images_path = '../../data/LigiLog-100/src/images'
+#images_path = '../../data/LigiLog-100/src/images'
 #classes_path = 'data/LogosInTheWild-v2/cleaned-data/brandROIs'
 #ann_path = 'data/LogosInTheWild-v2/cleaned-data/annotations.csv'
-#ann_path = "../../data/KEY-950/cleaned_annotations.csv"
+ann_path = "../../data/KEY-950/annotations_cleaned.csv"
 #ann_path = "../../data/KEY-100/annotations.csv"
-ann_path = '../../data/LigiLog-100/classes/industry-benchmark.csv'
+#ann_path = '../../data/LigiLog-100/classes/industry-benchmark.csv'
 #detections_path = 'new-os2d/os2d/detections/litw_detections_litw_30k.pth'
 #detections_path = "/home/user/Documents/memorable/detections.pth"
 #detections_path = "/home/user/Documents/memorable/sam-os2d/detections_ligilog.pth"
 #detections_path = "key100_detections.pth"
-detections_path = "ligilog100_detections_2.pth"
+#detections_path = "ligilog100_detections_2.pth"
 #detections_path = "key950_detections_2.pth"
+detections_path = "../../data/KEY-950/os2d_detections.pth"
 
 def get_iou(bb1, bb2, coords_type='cxcywh'):
     """
@@ -259,11 +260,11 @@ if __name__ == "__main__":
         ax.plot(recalls, precisions, label=iou_thres)
 
     # add axis labels to plot
-    ax.set_title('LigiLog-100')
+    ax.set_title('KEY-950 with os2d')
     ax.set_ylabel('Precision')
     ax.set_xlabel('Recall')
     ax.legend(loc="upper left")
 
     # display plot
     #plt.show()
-    plt.savefig("ligilog100-retrained-model_2.png")
+    plt.savefig("../../data/KEY-950/os2d_eval.png")
