@@ -210,7 +210,7 @@ if __name__ == "__main__":
                 #top_box = detections['boxes_xyxy'][i][idx]
                 image_df = df[df["imageid"] == imageid]
                 mask = detections['scores'][i] > confidence_thres
-                img = Image.open(f"{images_path}/{imageid}.jpg")
+                img = Image.open(f"{images_path}/{imageid}")
                 w, h = img.size
                 gt_boxes = torch.tensor(np.array(image_df[['lx','ty', 'rx', 'by']]))
                 boxes = detections['boxes_xyxy'][i][mask]
