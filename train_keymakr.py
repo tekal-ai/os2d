@@ -19,6 +19,8 @@ from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cie2000
 
+torch.multiprocessing.set_start_method('spawn')
+
 wandb.login()
 reference_images_path = "../../data/keymakr-os2d/assets/"
 logos_path = "../../data/keymakr-os2d/logos/"
