@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 # from synthetic_agumentations_dataloader import SyntheticAugmentationsDataset, collate_fn
 # from os2d_dataloader import OS2DDataset, os2d_collate_fn
-from keymakr_dataloader import LITWDataset, os2d_collate_fn, collate_fn
+from keymakr_dataloader import LITWDataset, os2d_collate_fn
 import torch
 from torch.utils.data import DataLoader
 from os2d.config import cfg
@@ -200,10 +200,10 @@ def main():
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
     train_dataset = LITWDataset(reference_images_path, logos_path, annotations_path, box_coder)
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=False, num_workers=0, collate_fn=collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
 
     eval_dataset = LITWDataset(reference_images_val_path, logos_val_path, annotations_val_path, box_coder)
-    eval_dataloader = DataLoader(eval_dataset, batch_size=32, shuffle=False, num_workers=0, collate_fn=collate_fn)
+    eval_dataloader = DataLoader(eval_dataset, batch_size=32, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
     train_losses = []
     for i in range(cfg.num_epochs):
         train_loss = train_epoch(train_dataloader, net, box_coder, optimizer, criterion)  # , anneal_lr_func)
