@@ -171,7 +171,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
     return np.mean(train_losses)
 
 
-if __name__ == '__main__':
+def main():
     try:
         torch.multiprocessing.set_start_method('spawn')
     except RuntimeError:
@@ -220,3 +220,5 @@ if __name__ == '__main__':
         print(train_loss, eval_loss)
 
     print("done")
+
+main()
