@@ -173,7 +173,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 def main():
     try:
-        torch.multiprocessing.set_start_method('spawn')
+        torch.multiprocessing.set_start_method('spawn', force=True)
     except RuntimeError:
         pass
     cfg.init.model = "best_os2d_checkpoint.pth"
