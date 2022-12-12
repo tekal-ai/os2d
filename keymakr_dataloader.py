@@ -25,11 +25,12 @@ def collate_fn(data):
     reference_images, logos, loc_targets, class_targets, class_ids, logo_sizes, \
     box_inverse_transform, boxes, img_size, image_ids, class_labels = zip(*data)
     reference_images_th = torch.stack(reference_images, dim=0)
+    logos_ls = torch.stack(logos, dim=0)
     loc_targets_th = torch.stack(loc_targets, dim=0)
     class_targets_th = torch.stack(class_targets, dim=0)
     #return reference_images_th, list(logos), loc_targets_th, class_targets_th, list(class_ids), list(logo_sizes), list(
     #    box_inverse_transform), list(boxes), list(img_size)
-    return reference_images_th, list(logos), loc_targets_th, class_targets_th, list(class_ids), list(logo_sizes), list(
+    return reference_images_th, logos_ls, loc_targets_th, class_targets_th, list(class_ids), list(logo_sizes), list(
         box_inverse_transform), list(boxes), list(img_size), list(image_ids), list(class_labels)
 
 
