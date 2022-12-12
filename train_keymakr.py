@@ -184,7 +184,7 @@ def main():
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k", tags=["increase num epochs"])
+    wandb.init(project="os2d-keymakr10k", tags=["increase num_workers"])
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
@@ -200,10 +200,10 @@ def main():
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
     train_dataset = LITWDataset(reference_images_path, logos_path, annotations_path, box_coder)
-    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=os2d_collate_fn)
 
     eval_dataset = LITWDataset(reference_images_val_path, logos_val_path, annotations_val_path, box_coder)
-    eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
+    eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=os2d_collate_fn)
     train_losses = []
     for i in range(cfg.num_epochs):
         train_loss = train_epoch(train_dataloader, net, box_coder, optimizer, criterion)  # , anneal_lr_func)
