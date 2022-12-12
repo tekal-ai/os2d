@@ -171,11 +171,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
     return np.mean(train_losses)
 
 
-def main():
-    try:
-        torch.multiprocessing.set_start_method('spawn', force=True)
-    except RuntimeError:
-        pass
+if __name__ == '__main__':
     cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "litw-models-4/checkpoint_iter_45000.pth"
     # cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
@@ -205,10 +201,10 @@ def main():
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
     train_dataset = LITWDataset(reference_images_path, logos_path, annotations_path, box_coder)
-    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=os2d_collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
 
     eval_dataset = LITWDataset(reference_images_val_path, logos_val_path, annotations_val_path, box_coder)
-    eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=os2d_collate_fn)
+    eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
     train_losses = []
     for i in range(cfg.num_epochs):
         train_loss = train_epoch(train_dataloader, net, box_coder, optimizer, criterion)  # , anneal_lr_func)
@@ -220,5 +216,3 @@ def main():
         print(train_loss, eval_loss)
 
     print("done")
-
-main()
