@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
     train_dataset = LITWDataset(reference_images_path, logos_path, annotations_path, box_coder)
-    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=1, collate_fn=os2d_collate_fn)
 
     eval_dataset = LITWDataset(reference_images_val_path, logos_val_path, annotations_val_path, box_coder)
     eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
