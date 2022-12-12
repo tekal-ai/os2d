@@ -19,7 +19,6 @@ from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
 from colormath.color_diff import delta_e_cie2000
 
-torch.multiprocessing.set_start_method('spawn')
 
 wandb.login()
 reference_images_path = "../../data/keymakr-os2d/assets/"
@@ -172,7 +171,11 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
     return np.mean(train_losses)
 
 
-def main():
+if __name__ == '__main__':
+    try:
+        torch.multiprocessing.set_start_method('spawn')
+    except RuntimeError:
+        pass
     cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "litw-models-4/checkpoint_iter_45000.pth"
     # cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
@@ -217,5 +220,3 @@ def main():
         print(train_loss, eval_loss)
 
     print("done")
-
-main()
