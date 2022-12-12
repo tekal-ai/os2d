@@ -41,14 +41,18 @@ def transpose(img, hflip=False, vflip=False, boxes=None, transform_list=None):
             boxes = boxes.transpose(FLIP_LEFT_RIGHT)
             # add inverse box transform
             if transform_list is not None:
-                transform_list.append(lambda boxes: boxes.transpose(FLIP_LEFT_RIGHT))
+                boxes_left_right = boxes.transpose(FLIP_LEFT_RIGHT)
+                # transform_list.append(lambda boxes: boxes.transpose(FLIP_LEFT_RIGHT))
+                transform_list.append(boxes_left_right)
     if vflip:
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         if boxes is not None:
             boxes = boxes.transpose(FLIP_TOP_BOTTOM)
             # add inverse box transform
             if transform_list is not None:
-                transform_list.append(lambda boxes: boxes.transpose(FLIP_TOP_BOTTOM))
+                boxes_top_bottom = boxes.transpose(FLIP_TOP_BOTTOM)
+                # transform_list.append(lambda boxes: boxes.transpose(FLIP_TOP_BOTTOM))
+                transform_list.append(boxes_top_bottom)
     return img, boxes
 
 
@@ -74,7 +78,9 @@ def resize(img, target_size, random_interpolation=False,
     if boxes is not None:
         boxes = boxes.resize(target_size)
         if transform_list is not None:
-            transform_list.append(lambda boxes: boxes.resize(image_size))
+            boxes_resize = boxes.resize(image_size)
+            # transform_list.append(lambda boxes: boxes.resize(image_size))
+            transform_list.append(boxes_resize)
     else:
         assert transform_list is None
     return img, boxes
@@ -190,7 +196,9 @@ def crop(img,
         if transform_list is not None:
             # implement "uncrop" operation using the saem crop function
             uncrop_xyxy = (-crop_xyxy[0], -crop_xyxy[1], -crop_xyxy[0] + image_size.w, -crop_xyxy[1] + image_size.h)
-            transform_list.append(lambda boxes: boxes.crop(uncrop_xyxy))
+            boxes_uncrop = boxes.crop(uncrop_xyxy)
+            # transform_list.append(lambda boxes: boxes.crop(uncrop_xyxy))
+            transform_list.append(boxes_uncrop)
 
         return img, boxes, mask_cutoff_boxes, mask_difficult_boxes
     else:
