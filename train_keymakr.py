@@ -172,6 +172,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 
 if __name__ == '__main__':
+    torch.multiprocessing.set_start_method("spawn")
     cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "litw-models-4/checkpoint_iter_45000.pth"
     # cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
