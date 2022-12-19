@@ -126,10 +126,10 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
             net(images, class_images,
                 train_mode=True,
                 fine_tune_features=cfg.train.model.train_features)
-        print(loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners)
+
         cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
             box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
-
+        print(cls_targets_remapped, ious_anchor, ious_anchor_corrected)
         losses = criterion(loc_scores, loc_targets,
                            class_scores, class_targets,
                            cls_targets_remapped=cls_targets_remapped,
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k", resume=True)
+    wandb.init(project="os2d-keymakr10k")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
