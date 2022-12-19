@@ -126,6 +126,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
             net(images, class_images,
                 train_mode=True,
                 fine_tune_features=cfg.train.model.train_features)
+        print(loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners)
         cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
             box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
 
@@ -174,12 +175,11 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method("spawn")
     #cfg.init.model = "best_os2d_checkpoint.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
     cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
-    # cfg.init.model = "litw-models-4/checkpoint_iter_45000.pth"
-    # cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
+
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
     cfg.num_epochs = 10
