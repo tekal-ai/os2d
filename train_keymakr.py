@@ -126,10 +126,11 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
             net(images, class_images,
                 train_mode=True,
                 fine_tune_features=cfg.train.model.train_features)
+        print(loc_scores.shape, class_scores.shape)
 
         cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
             box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
-        print(cls_targets_remapped, ious_anchor, ious_anchor_corrected)
+
         losses = criterion(loc_scores, loc_targets,
                            class_scores, class_targets,
                            cls_targets_remapped=cls_targets_remapped,
