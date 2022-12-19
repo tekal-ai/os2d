@@ -174,9 +174,12 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method("spawn")
-    cfg.init.model = "best_os2d_checkpoint.pth"
-    # cfg.init.model = "litw-models-4/checkpoint_iter_45000.pth"
-    # cfg.init.model = "synthetic_augmentations_cpts/checkpoint_crisp-star-83_25381.pth"
+    #cfg.init.model = "best_os2d_checkpoint.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
+
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
     cfg.num_epochs = 10
@@ -187,7 +190,7 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k", tags=["increase num_workers"])
+    wandb.init(project="os2d-keymakr10k", resume=True)
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
