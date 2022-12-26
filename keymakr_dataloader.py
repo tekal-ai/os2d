@@ -82,7 +82,7 @@ class LITWDataset(Dataset):
             if mode == "RGBA":
                 bg_color = tuple(list(bg_color) + [255])
         colored_bg = Image.new(mode, img.size, bg_color)
-        colored_bg.paste(img, mask=img.split()[3])
+        colored_bg.paste(img, mask=img.split()[-1])
         return colored_bg
 
     def __getitem__(self, idx):
