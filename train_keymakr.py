@@ -196,7 +196,7 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k", tags=['use all logos'], resume="allow", id="36jkoxip")
+    wandb.init(project="os2d-keymakr10k", tags=['use all logos + dominant color'], resume="allow", id="3or08za0")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
