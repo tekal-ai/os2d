@@ -1,4 +1,4 @@
-import scipy
+import scipy.cluster
 from PIL import Image
 import numpy as np
 import pandas as pd
