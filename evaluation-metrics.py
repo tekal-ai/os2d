@@ -37,7 +37,9 @@ ann_path = "../../data/KEY-950/annotations_cleaned.csv"
 #detections_path = "key100_detections.pth"
 #detections_path = "ligilog100_detections_2.pth"
 #detections_path = "key950_detections_2.pth"
-detections_path = "../../data/KEY-950/os2d_detections.pth"
+#detections_path = "../../data/KEY-950/os2d_keymakr_10k_detections.pth"
+#detections_path = "../../data/KEY-950/os2d_keymakr_10k_detections_latest.pth"
+detections_path = "../../data/KEY-950/os2d_keymakr_10k_detections_latest_crisp_cosmo_2.pth"
 #detections_path = "../KEY-950/gcc_detections_all.pth"
 #detections_path = "../KEY-950/gcc_detections_final.pth"
 
@@ -273,11 +275,11 @@ if __name__ == "__main__":
             plt.text(recall_pt, precision_pt, conf, fontsize=10, color=colors[id])
 
     # add axis labels to plot
-    ax.set_title('KEY-950 with gcc')
+    ax.set_title('KEY-950 with latest retrained model 2')
     ax.set_ylabel('Precision')
     ax.set_xlabel('Recall')
     ax.legend(loc="upper left", title="IOU thresholds")
 
     # display plot
     #plt.show()
-    plt.savefig("../KEY-950/gcc_eval_final.png")
+    plt.savefig("../../data/KEY-950/os2d_keymakr_10k_eval_latest_crisp_cosmos_2.png")

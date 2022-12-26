@@ -126,7 +126,6 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
             net(images, class_images,
                 train_mode=True,
                 fine_tune_features=cfg.train.model.train_features)
-        print(loc_scores.shape, class_scores.shape)
 
         cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
             box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
@@ -179,11 +178,17 @@ if __name__ == '__main__':
     #cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_earnest-spaceship-90_9946.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_breezy-voice-95_9946.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_rare-yogurt-97_9946.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946_1.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946_2.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
-    cfg.num_epochs = 10
+    cfg.num_epochs = 5
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -191,7 +196,7 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k")
+    wandb.init(project="os2d-keymakr10k", tags=['use all logos'], resume="allow", id="36jkoxip")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
@@ -213,6 +218,8 @@ if __name__ == '__main__':
     eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
     train_losses = []
     for i in range(cfg.num_epochs):
+        torch.cuda.empty_cache()
+
         train_loss = train_epoch(train_dataloader, net, box_coder, optimizer, criterion)  # , anneal_lr_func)
         wandb.log({'train_loss' : train_loss})
 

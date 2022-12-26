@@ -79,6 +79,7 @@ class LITWDataset(Dataset):
                       image[-4:] == '.jpg' or image[-4:] == '.png' or image[-5:] == '.jpeg']
             choice = random.choice(images)
             class_images.append(choice)
+            # class_images.extend(images)
 
         for i in range(len(class_images)):
             class_images[i] = self._add_colored_background(class_images[i])

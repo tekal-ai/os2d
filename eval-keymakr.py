@@ -88,7 +88,14 @@ def main():
     #cfg.init.model = "litw-models/litw-94/checkpoint_iter_45000.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_proud-disco-13_30856.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_rich-firebrand-14_30856.pth"
-    cfg.init.model = "best_os2d_checkpoint.pth"
+    # cfg.init.model = "best_os2d_checkpoint.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_rich-donkey-21_29838.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_celestial-pine-94_9946.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_crisp-cosmos-92_19892.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946_3.pth"
+
     cfg.is_cuda = torch.cuda.is_available()
     # set this to use faster convolutions
     if cfg.is_cuda:
@@ -107,16 +114,18 @@ def main():
     #annspath = "../../data/LigiLog-100/classes/industry-benchmark.csv"
     #annspath = "../../data/KEY-950/cleaned_annotations.csv"
     #querypath = "../../data/KEY-100/classes"
-    annspath = "../../data/KEY-950/annotations.csv"
-    querypath = "../../data/KEY-950/logos"
+    annspath = "../../data/KEY-950/annotations_cleaned.csv"
+    querypath = "../../data/KEY-950/logos_cleaned"
     #querypath = "../../data/KEY-950/logos"
     #imgspath = "../../data/KEY-100/images"
     #imgspath = "../../data/LigiLog-100/src/images"
-    imgspath = "../../data/KEY-950/images"
+    imgspath = "../../data/KEY-950/assets"
     #save_path = 'detections/ligilog100_best7.pth'
     #save_path = "ligilog100_detections_2.pth"
     #save_path = "key950_detections_2.pth"
-    save_path = "../../data/KEY-950/os2d_detections.pth"
+    # save_path = "../../data/KEY-950/os2d_keymakr_10k_detections_latest.pth"
+    # save_path = "../../data/KEY-950/os2d_keymakr_10k_detections_latest_crisp_cosmo_2.pth"
+    save_path = "../../data/KEY-950/os2d_keymakr_10k_detections_all_logos.pth"
 
     #anns = pd.read_csv(annspath)
     anns = pd.read_csv(annspath, sep=";")
@@ -156,7 +165,6 @@ def main():
         loc_prediction_batch, class_prediction_batch, _, fm_size, transform_corners_batch = \
             net(images, class_images)
 
-        #print(images.shape, class_images[0].shape, cfg.train.model.train_features)
         image_loc_scores_pyramid = [loc_prediction_batch[0]]
         image_class_scores_pyramid = [class_prediction_batch[0]]
         img_size_pyramid = [FeatureMapSize(img=images[0])]
