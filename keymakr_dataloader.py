@@ -73,6 +73,8 @@ class LITWDataset(Dataset):
 
     def _add_colored_background(self, img, bg_color=None, mode="RGBA"):
         assert mode in ["RGB", "RGBA"], "Invalid mode."
+        if img.mode not in ["RGB", "RGBA"]:
+            img = img.convert("RGBA")
         if bg_color is not None:
             assert len(bg_color) == len(mode)
         else:
