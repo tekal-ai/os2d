@@ -100,9 +100,9 @@ class LITWDataset(Dataset):
             images = [Image.open(f'{self.class_path}/{name}/{image}').convert("RGBA") \
                       for image in os.listdir(f'{self.class_path}/{name}') if
                       image[-4:] == '.jpg' or image[-4:] == '.png' or image[-5:] == '.jpeg']
-            choice = random.choice(images)
-            class_images.append(choice)
-            #class_images.extend(images)
+            #choice = random.choice(images)
+            #class_images.append(choice)
+            class_images.extend(images)
 
         for i in range(len(class_images)):
             class_images[i] = self._add_colored_background(class_images[i], bg_color)
