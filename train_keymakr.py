@@ -178,17 +178,20 @@ if __name__ == '__main__':
     #cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
-    # cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_earnest-spaceship-90_9946.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_breezy-voice-95_9946.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_rare-yogurt-97_9946.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946_1.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946_2.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_honest-plant-98_9946_2.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_1.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_2.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_3.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
-    cfg.num_epochs = 5
+    cfg.num_epochs = 1
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -196,7 +199,7 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k", tags=['use all logos + dominant color'], resume="allow", id="3or08za0")
+    wandb.init(project="os2d-keymakr10k", tags=['hearty_snowball + dominant color + batch_size 8'])
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
@@ -212,10 +215,10 @@ if __name__ == '__main__':
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
     train_dataset = LITWDataset(reference_images_path, logos_path, annotations_path, box_coder)
-    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
 
     eval_dataset = LITWDataset(reference_images_val_path, logos_val_path, annotations_val_path, box_coder)
-    eval_dataloader = DataLoader(eval_dataset, batch_size=1, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
+    eval_dataloader = DataLoader(eval_dataset, batch_size=8, shuffle=False, num_workers=0, collate_fn=os2d_collate_fn)
     train_losses = []
     for i in range(cfg.num_epochs):
         torch.cuda.empty_cache()
