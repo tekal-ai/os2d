@@ -178,7 +178,7 @@ if __name__ == '__main__':
     #cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     #cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
+    #cfg.init.model = "keymakr_cpts/checkpoint_hearty-snowball-47_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_earnest-spaceship-90_9946.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_breezy-voice-95_9946.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_rare-yogurt-97_9946.pth"
@@ -188,10 +188,11 @@ if __name__ == '__main__':
     # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_1.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_2.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_3.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_winter-violet-104_29838.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 1
-    cfg.num_epochs = 1
+    cfg.num_epochs = 2
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -199,7 +200,7 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    wandb.init(project="os2d-keymakr10k", tags=['hearty_snowball + dominant color + batch_size 8'])
+    wandb.init(project="os2d-keymakr10k", tags=['hearty_snowball + dominant color + all logos'], resume="allow", id="k1xk77s2")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
