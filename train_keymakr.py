@@ -91,7 +91,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
                            cls_targets_remapped=cls_targets_remapped,
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
-        eval_losses.append(losses["loss"].item())
+        eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
         # wandb.log({"eval_loss": np.mean(eval_losses)})
 
     return np.mean(eval_losses)
