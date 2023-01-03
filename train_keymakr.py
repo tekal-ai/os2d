@@ -144,7 +144,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         #    print("Annealing...")
         #    set_learning_rate(optimizer, lr)
 
-        train_losses.append(main_loss.item())
+        train_losses.append(main_loss.item() / cfg.train.batch_size)
         # wandb.log({"train_loss": np.mean(train_losses)})
         # save full grad
         grad = OrderedDict()
@@ -169,7 +169,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         time0 = time1
     checkpoint_model(net, optimizer, cfg.output.path, cfg.is_cuda, i_iter=i_iter, experiment_name=wandb.run.name)
 
-    return np.mean(train_losses) / cfg.train.batch_size
+    return np.mean(train_losses)
 
 
 if __name__ == '__main__':
