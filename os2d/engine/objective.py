@@ -135,12 +135,12 @@ class Os2dObjective(nn.Module):
             https://github.com/kuangliu/torchcv/blob/master/torchcv/loss/ssd_loss.py
         """
         # uncomment when using all logos
-        #if loc_preds.shape[1] != loc_targets.shape[1]:
-        #    loc_targets_list = loc_targets.tolist()
-        #    tmp = loc_targets_list[0][0]
-        #    tmp_list = [tmp for i in range(loc_preds.shape[1])]
-        #    loc_targets_list[0] = tmp_list
-        #    loc_targets = torch.tensor(loc_targets_list).cuda()
+        if loc_preds.shape[1] != loc_targets.shape[1]:
+            loc_targets_list = loc_targets.tolist()
+            tmp = loc_targets_list[0][0]
+            tmp_list = [tmp for i in range(loc_preds.shape[1])]
+            loc_targets_list[0] = tmp_list
+            loc_targets = torch.tensor(loc_targets_list).cuda()
 
         # take pyramid into account: merge all in one tensor if needed
         loc_preds, loc_targets, cls_preds, cls_targets, \
