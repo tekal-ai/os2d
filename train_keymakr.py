@@ -169,7 +169,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         time0 = time1
     checkpoint_model(net, optimizer, cfg.output.path, cfg.is_cuda, i_iter=i_iter, experiment_name=wandb.run.name)
 
-    return np.mean(train_losses)
+    return np.mean(train_losses) / cfg.train.batch_size
 
 
 if __name__ == '__main__':
