@@ -210,8 +210,8 @@ if __name__ == '__main__':
               'init_model': cfg.init.model
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss'], resume="allow")
-    wandb.config(config)
+    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss'],
+               config=config, resume="allow")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
