@@ -139,8 +139,9 @@ class Os2dObjective(nn.Module):
             loc_targets_list = loc_targets.tolist()
             tmp = loc_targets_list[0][0]
             tmp_list = [tmp for i in range(loc_preds.shape[1])]
-            loc_targets_list[0] = tmp_list
-            loc_targets = torch.tensor(loc_targets_list).cuda()
+            # loc_targets_list[0] = tmp_list
+            loc_targets_list_mod = [tmp_list for i in range(len(loc_targets_list))]
+            loc_targets = torch.tensor(loc_targets_list_mod).cuda()
 
         # take pyramid into account: merge all in one tensor if needed
         loc_preds, loc_targets, cls_preds, cls_targets, \
