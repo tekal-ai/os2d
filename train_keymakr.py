@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
+from torch import autocast
 from torch.cuda.amp import GradScaler
 
 # from synthetic_agumentations_dataloader import SyntheticAugmentationsDataset, collate_fn
@@ -68,7 +69,6 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
     print("Evaluating...")
     eval_losses = []
     net.eval()
-    scaler = GradScaler()
     for i, batch_data in enumerate(eval_dataloader):
         if i % 50 == 0:
             print(i)
@@ -94,9 +94,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
                            cls_targets_remapped=cls_targets_remapped,
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
-        # eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
-        scaled_loss = scaler.scale(losses["loss"])
-        eval_losses.append(scaled_loss.item())
+        eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
         # wandb.log({"eval_loss": np.mean(eval_losses)})
 
     return np.mean(eval_losses)
@@ -128,18 +126,19 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
         optimizer.zero_grad(set_to_none=True)
         # print(images.shape)
-        loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
-            net(images, class_images,
-                train_mode=True,
-                fine_tune_features=cfg.train.model.train_features)
+        with autocast(device_type='cuda', dtype=torch.float16):
+            loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
+                net(images, class_images,
+                    train_mode=True,
+                    fine_tune_features=cfg.train.model.train_features)
 
-        cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
-            box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
+            cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
+                box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
 
-        losses = criterion(loc_scores, loc_targets,
-                           class_scores, class_targets,
-                           cls_targets_remapped=cls_targets_remapped,
-                           cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
+            losses = criterion(loc_scores, loc_targets,
+                               class_scores, class_targets,
+                               cls_targets_remapped=cls_targets_remapped,
+                               cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
         main_loss = losses["loss"]
         # main_loss.backward()
