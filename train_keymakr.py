@@ -1,5 +1,7 @@
 import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
+from torch.cuda.amp import GradScaler
+
 # from synthetic_agumentations_dataloader import SyntheticAugmentationsDataset, collate_fn
 # from os2d_dataloader import OS2DDataset, os2d_collate_fn
 from keymakr_dataloader import LITWDataset, os2d_collate_fn
@@ -66,6 +68,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
     print("Evaluating...")
     eval_losses = []
     net.eval()
+    scaler = GradScaler()
     for i, batch_data in enumerate(eval_dataloader):
         if i % 50 == 0:
             print(i)
@@ -91,7 +94,9 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
                            cls_targets_remapped=cls_targets_remapped,
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
-        eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
+        # eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
+        scaled_loss = scaler.scale(losses["loss"])
+        eval_losses.append(scaled_loss.item())
         # wandb.log({"eval_loss": np.mean(eval_losses)})
 
     return np.mean(eval_losses)
@@ -104,6 +109,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
               freeze_bn_transform=cfg.train.model.freeze_bn_transform)
     train_losses = []
     times = []
+    scaler = GradScaler()
     for batch_data in train_dataloader:
         time0 = time.time()
         i_iter += 1
@@ -136,7 +142,9 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
         main_loss = losses["loss"]
-        main_loss.backward()
+        # main_loss.backward()
+        scaled_loss = scaler.scale(main_loss)
+        scaled_loss.backward()
 
         # lr = anneal_lr_func(i_iter + 1, anneal_now=i_iter > cfg.train.optim.anneal_lr.initial_patience)
 
@@ -144,7 +152,8 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         #    print("Annealing...")
         #    set_learning_rate(optimizer, lr)
 
-        train_losses.append(main_loss.item() / cfg.train.batch_size)
+        # train_losses.append(main_loss.item() / cfg.train.batch_size)
+        train_losses.append(scaled_loss.item())
         # wandb.log({"train_loss": np.mean(train_losses)})
         # save full grad
         grad = OrderedDict()
@@ -158,7 +167,9 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         if math.isnan(grad_norm):
             print("gradient is NaN")
         else:
-            optimizer.step()
+            # optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
 
         # save intermediate model
         # if cfg.output.path and cfg.output.save_iter and i_iter % cfg.output.save_iter == 0:
@@ -193,7 +204,7 @@ if __name__ == '__main__':
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 8
-    cfg.num_epochs = 1
+    cfg.num_epochs = 5
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -210,7 +221,7 @@ if __name__ == '__main__':
               'init_model': cfg.init.model
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss'],
+    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scaled loss (GradScaler)'],
                config=config, resume="allow")
     # set this to use faster convolutions
     if cfg.is_cuda:
