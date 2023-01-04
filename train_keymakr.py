@@ -184,7 +184,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method("spawn")
-    cfg.init.model = "best_os2d_checkpoint.pth"
+    # cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
@@ -200,6 +200,10 @@ if __name__ == '__main__':
     # cfg.init.model = "keymakr_cpts/checkpoint_swift-paper-100_9946_3.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_winter-violet-104_29838_2.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_pious-dust-102_6220_1.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_3732_1.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_2.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 8
@@ -220,7 +224,7 @@ if __name__ == '__main__':
               'init_model': cfg.init.model
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scaled loss (GradScaler)'],
+    wandb.init(project="os2d-keymakr10k", tags=['clean-snow + batch size 8 + scaled loss (GradScaler)'],
                config=config, resume="allow")
     # set this to use faster convolutions
     if cfg.is_cuda:
