@@ -91,7 +91,7 @@ class LITWDataset(Dataset):
         reference_image = Image.open(os.path.join(self.reference_path, str(imageid))).convert("RGB")
         names = idx_df["name"].unique()
 
-        bg_color = self._find_dominant_color(reference_image)
+        # bg_color = self._find_dominant_color(reference_image)
 
         class_images = []
 
@@ -105,7 +105,7 @@ class LITWDataset(Dataset):
             #class_images.extend(images)
 
         for i in range(len(class_images)):
-            class_images[i] = self._add_colored_background(class_images[i], bg_color)
+            class_images[i] = self._add_colored_background(class_images[i])
             class_images[i] = class_images[i].convert("RGB")
 
         class_ids = idx_df["classid"].tolist()

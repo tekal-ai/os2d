@@ -94,7 +94,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
                            cls_targets_remapped=cls_targets_remapped,
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
-        eval_losses.append(losses["loss"].item())
+        eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
         # wandb.log({"eval_loss": np.mean(eval_losses)})
 
     return np.mean(eval_losses)
@@ -147,7 +147,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         #    print("Annealing...")
         #    set_learning_rate(optimizer, lr)
 
-        train_losses.append(main_loss.item())
+        train_losses.append(main_loss.item() / cfg.train.batch_size)
         # wandb.log({"train_loss": np.mean(train_losses)})
         # save full grad
         grad = OrderedDict()
@@ -199,8 +199,8 @@ if __name__ == '__main__':
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
-    cfg.train.batch_size = 32
-    cfg.num_epochs = 5
+    cfg.train.batch_size = 8
+    cfg.num_epochs = 1
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -217,7 +217,7 @@ if __name__ == '__main__':
               'init_model': cfg.init.model
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['os2d with batch size 32'],
+    wandb.init(project="os2d-keymakr10k", tags=['os2d + batch size 8'],
                config=config, resume="allow")
     # set this to use faster convolutions
     if cfg.is_cuda:
