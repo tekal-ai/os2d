@@ -94,7 +94,7 @@ def evaluate(eval_dataloader, net, box_coder, optimizer, criterion):
                            cls_targets_remapped=cls_targets_remapped,
                            cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
-        eval_losses.append(losses["loss"].item() / cfg.train.batch_size)
+        eval_losses.append(losses["loss"].item())
         # wandb.log({"eval_loss": np.mean(eval_losses)})
 
     return np.mean(eval_losses)
@@ -107,7 +107,6 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
               freeze_bn_transform=cfg.train.model.freeze_bn_transform)
     train_losses = []
     times = []
-    scaler = GradScaler()
     for batch_data in train_dataloader:
         time0 = time.time()
         i_iter += 1
@@ -126,24 +125,21 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
         optimizer.zero_grad(set_to_none=True)
         # print(images.shape)
-        with autocast(device_type='cuda', dtype=torch.float16):
-            loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
-                net(images, class_images,
-                    train_mode=True,
-                    fine_tune_features=cfg.train.model.train_features)
+        loc_scores, class_scores, class_scores_transform_detached, fm_sizes, corners = \
+            net(images, class_images,
+                train_mode=True,
+                fine_tune_features=cfg.train.model.train_features)
 
-            cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
-                box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
+        cls_targets_remapped, ious_anchor, ious_anchor_corrected = \
+            box_coder.remap_anchor_targets(loc_scores, batch_img_size, class_image_sizes, batch_boxes)
 
-            losses = criterion(loc_scores, loc_targets,
-                               class_scores, class_targets,
-                               cls_targets_remapped=cls_targets_remapped,
-                               cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
+        losses = criterion(loc_scores, loc_targets,
+                           class_scores, class_targets,
+                           cls_targets_remapped=cls_targets_remapped,
+                           cls_preds_for_neg=class_scores_transform_detached if not cfg.train.model.train_transform_on_negs else None)
 
         main_loss = losses["loss"]
-        # main_loss.backward()
-        scaled_loss = scaler.scale(main_loss)
-        scaled_loss.backward()
+        main_loss.backward()
 
         # lr = anneal_lr_func(i_iter + 1, anneal_now=i_iter > cfg.train.optim.anneal_lr.initial_patience)
 
@@ -151,8 +147,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         #    print("Annealing...")
         #    set_learning_rate(optimizer, lr)
 
-        # train_losses.append(main_loss.item() / cfg.train.batch_size)
-        train_losses.append(scaled_loss.item())
+        train_losses.append(main_loss.item())
         # wandb.log({"train_loss": np.mean(train_losses)})
         # save full grad
         grad = OrderedDict()
@@ -166,9 +161,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
         if math.isnan(grad_norm):
             print("gradient is NaN")
         else:
-            # optimizer.step()
-            scaler.step(optimizer)
-            scaler.update()
+            optimizer.step()
 
         # save intermediate model
         # if cfg.output.path and cfg.output.save_iter and i_iter % cfg.output.save_iter == 0:
@@ -184,7 +177,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method("spawn")
-    # cfg.init.model = "best_os2d_checkpoint.pth"
+    cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
@@ -203,10 +196,10 @@ if __name__ == '__main__':
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_3732_1.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_2.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
-    cfg.train.batch_size = 8
+    cfg.train.batch_size = 32
     cfg.num_epochs = 5
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
@@ -224,7 +217,7 @@ if __name__ == '__main__':
               'init_model': cfg.init.model
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['clean-snow + batch size 8 + scaled loss (GradScaler)'],
+    wandb.init(project="os2d-keymakr10k", tags=['os2d with batch size 32'],
                config=config, resume="allow")
     # set this to use faster convolutions
     if cfg.is_cuda:
