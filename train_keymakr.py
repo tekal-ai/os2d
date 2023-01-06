@@ -177,7 +177,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method("spawn")
-    cfg.init.model = "best_os2d_checkpoint.pth"
+    # cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
@@ -196,11 +196,11 @@ if __name__ == '__main__':
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_3732_1.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_2.pth"
-    # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
+    cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 8
-    cfg.num_epochs = 1
+    cfg.num_epochs = 4
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -208,17 +208,17 @@ if __name__ == '__main__':
     with open('cfg.yml', 'w') as f:
         with redirect_stdout(f): print(cfg.dump())
 
-    config = {'num_epochs': cfg.num_epochs,
+    config = {'num_epochs': 10,
               'batch_size': cfg.train.batch_size,
               'random_seed': cfg.random_seed,
               'learning_rate': cfg.train.optim.lr,
               'using_all_logos': False,
               'using_dominant_color': True,
-              'init_model': cfg.init.model
+              'init_model': "best_os2d_checkpoint.pth"
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['os2d + batch size 8'],
-               config=config, resume="allow")
+    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss'],
+               config=config, resume="allow", id="hfqw6yg5")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
