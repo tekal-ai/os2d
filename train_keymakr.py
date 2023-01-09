@@ -177,7 +177,7 @@ def train_epoch(train_dataloader, net, box_coder, optimizer, criterion):  # , an
 
 if __name__ == '__main__':
     torch.multiprocessing.set_start_method("spawn")
-    # cfg.init.model = "best_os2d_checkpoint.pth"
+    cfg.init.model = "best_os2d_checkpoint.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_honest-thunder-44_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_lunar-breeze-45_29838.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_confused-sponge-46_19892.pth"
@@ -196,11 +196,11 @@ if __name__ == '__main__':
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_3732_1.pth"
     # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_2.pth"
-    cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
+    # cfg.init.model = "keymakr_cpts/checkpoint_clean-snow-121_1244_3.pth"
 
     cfg.is_cuda = torch.cuda.is_available()
     cfg.train.batch_size = 8
-    cfg.num_epochs = 4
+    cfg.num_epochs = 1
     cfg.output.path = "keymakr_cpts"
     cfg.output.save_iter = 1000
     cfg.random_seed = 42
@@ -214,11 +214,12 @@ if __name__ == '__main__':
               'learning_rate': cfg.train.optim.lr,
               'using_all_logos': False,
               'using_dominant_color': True,
-              'init_model': "best_os2d_checkpoint.pth"
+              'init_model': "best_os2d_checkpoint.pth",
+              'optimizer': "adadelta"
               }
 
-    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss'],
-               config=config, resume="allow", id="hfqw6yg5")
+    wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss + adadelta'],
+               config=config, resume="allow")
     # set this to use faster convolutions
     if cfg.is_cuda:
         assert torch.cuda.is_available(), "Do not have available GPU, but cfg.is_cuda == 1"
@@ -229,7 +230,7 @@ if __name__ == '__main__':
 
     net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
     parameters = get_trainable_parameters(net)
-    optimizer = create_optimizer(parameters, cfg.train.optim, optimizer_state)
+    optimizer = create_optimizer(parameters, "adadelta", optimizer_state)
     # _, anneal_lr_func = setup_lr(optimizer, full_log, cfg.train.optim.anneal_lr, cfg.eval.iter)
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
