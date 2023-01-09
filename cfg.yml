@@ -115,7 +115,7 @@ train:
     lr: 0.0001
     max_grad_norm: 100.0
     max_iter: 200000
-    optim_method: sgd
+    optim_method: adadelta
     sgd_momentum: 0.9
     weight_decay: 0.0001
 visualization:

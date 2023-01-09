@@ -214,8 +214,8 @@ if __name__ == '__main__':
               'learning_rate': cfg.train.optim.lr,
               'using_all_logos': False,
               'using_dominant_color': True,
-              'init_model': "best_os2d_checkpoint.pth",
-              'optimizer': "adadelta"
+              'init_model': cfg.init.model,
+              'optimizer': cfg.train.optim
               }
 
     wandb.init(project="os2d-keymakr10k", tags=['dominant color + batch size 8 + scale loss + adadelta'],
@@ -230,7 +230,7 @@ if __name__ == '__main__':
 
     net, box_coder, criterion, img_normalization, optimizer_state = build_os2d_from_config(cfg)
     parameters = get_trainable_parameters(net)
-    optimizer = create_optimizer(parameters, "adadelta", optimizer_state)
+    optimizer = create_optimizer(parameters, cfg.train.optim, optimizer_state)
     # _, anneal_lr_func = setup_lr(optimizer, full_log, cfg.train.optim.anneal_lr, cfg.eval.iter)
 
     # train_dataset = SyntheticAugmentationsDataset(reference_images_path, logos_path, box_coder)
